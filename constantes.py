@@ -27,7 +27,7 @@ structure = {
                     'max_value': np.inf#,
                     # 'values': None
                 },
-                'min_sample_split': {
+                'min_samples_split': {
                     'type': int,
                     'description': "(positive integer > 1) The minimum number of data objects required to split a node",
                     'default': 2,
@@ -86,7 +86,7 @@ structure = {
                     'max_value': np.inf#,
                     #'values': None
                 },
-                'min_sample_split': {
+                'min_samples_split': {
                     'type': int,
                     'description': "(positive integer > 1) The minimum number of data objects required to split a node",
                     'default': 2,
