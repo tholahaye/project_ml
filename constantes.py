@@ -69,9 +69,9 @@ STRUCTURE = {
                     'type': 'int',
                     'description': "(positive integer) The number of features to sample on each tree. If not specified, then at most n^(1/2) features are sampled.",
                     'optional': True,
-                    'default': "sqrt", #TODO if not selected or empty number, then set to "sqrt"
-                    'min value': 1,
-                    'max_value': float('inf') #TODO len(df.columns)
+                    'default': "sqrt",  # TODO if not selected or empty number, then set to "sqrt"
+                    'min_value': 1,
+                    'max_value': float('inf')  # TODO len(df.columns)
                 },
                 'criterion': {
                     'type': 'str',
@@ -80,7 +80,7 @@ STRUCTURE = {
                     'values': ['gini', 'entropy']
                 },
                 # splitter: {},
-                'max_depth': {  #The maximum depth of the tree
+                'max_depth': {  # The maximum depth of the tree
                     'type': 'int',
                     'description': "(positive integer) The maximum tree depth",
                     'optional': True,
