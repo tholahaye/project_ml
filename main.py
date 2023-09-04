@@ -10,45 +10,43 @@ class AppWeb:
 
         intro()
         st.title("Welcome")
+        try:
+            self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
+                                         database="d4on6t2qk9dj5a",
+                                         user="nxebpjsgxecqny",
+                                         password="1da2f1f48e4a37bf64e3344fe7670a6547c169472263b62d042a01a8d08d2114")
 
-        self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
-                                     database="d4on6t2qk9dj5a",
-                                     user="nxebpjsgxecqny",
-                                     password="1da2f1f48e4a37bf64e3344fe7670a6547c169472263b62d042a01a8d08d2114")
+            self.cursor = self.conn.cursor()
 
-        self.cursor = self.conn.cursor()
+            self.table_names_list = self.get_table_names()
 
-        self.table_names_list = self.get_table_names()
+            st.sidebar.caption(":red[__Choose the parameters:__]")
 
-        st.sidebar.caption(":red[__Choose the parameters:__]")
+            self.dataset_name = st.sidebar.selectbox("_Datasets:_", self.table_names_list)
 
-        self.dataset_name = st.sidebar.selectbox("_Datasets:_", self.table_names_list)
+            self.dataframe = self.df_creation()
 
-        self.dataframe = self.df_creation()
+            self.model_type = self.get_model_type()
 
-        self.get_model_type()
+            if self.model_type == 'Classification':
+                self.model = st.sidebar.selectbox("_Model:_", ["ClassificationTree", "RandomForest"])
+            if self.model_type == 'Regression':
+                self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])
 
-        self.type_model = self.get_model_type()
+            self.hyperparameters_list = model()[self.model_type][self.model]['hyperparameters']
 
-        if self.type_model == 'Classification':
-            self.model = st.sidebar.selectbox("_Model:_", ["ClassificationTree", "RandomForest"])
-        if self.type_model == 'Regression':
-            self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])
+            self.hyperparameters_values = []
 
-        self.hyperparameters_list = model()[self.type_model][self.model]['hyperparameters']
+            for hp in self.hyperparameters_list:
+                #TODO: A appeler avec le modèle
+                hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')
+                self.hyperparameters_values.append(hp)
 
-        self.hyperparameters_values = []
+            if len(self.hyperparameters_values) == len(self.hyperparameters_list):
+                st.sidebar.text(self.hyperparameters_values)
 
-        for hp in self.hyperparameters_list:
-            hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')# A appeler avec le modèle
-
-
-            self.hyperparameters_values.append(hp)
-
-        if len(self.hyperparameters_values) == len(self.hyperparameters_list):
-            x = st.sidebar.expander
-            with x:
-                st.text(self.hyperparameters_values)
+        finally:
+            self.conn.close()
 
     def get_table_names(self):
         self.cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
@@ -77,7 +75,8 @@ class AppWeb:
         else:
             return "Classification"
 
-# A enlever avec l'instanciation du modele
+
+#TODO: A enlever avec l'instanciation du modele
 def model():
     model_dic = {'Classification': {
                             "ClassificationTree": {'hyperparameters': ['a', 'b', 'c']},
