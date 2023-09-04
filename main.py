@@ -1,15 +1,16 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
-from streamlit_option_menu import option_menu
+from lot2 import Preprocessing
+from constantes import structure
 
 
 class AppWeb:
 
     def __init__(self):
-
         intro()
         st.title("Welcome")
+
         try:
             self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
                                          database="d4on6t2qk9dj5a",
@@ -26,24 +27,55 @@ class AppWeb:
 
             self.dataframe = self.df_creation()
 
+            try:
+                self.random_state = int(st.sidebar.text_input("Random state:",
+                                                              help='Write an integer. It controls the '
+                                                              'shuffling applied to the data before'
+                                                              ' applying the split.'))
+            except ValueError:
+                st.sidebar.markdown(':red[__Error: The selected random state must be an integer__]')
+
+            try:
+                self.train_size = float(st.sidebar.text_input("Train size:",
+                                                            help='Write a number between 0.0 and 1.0 and'
+                                                                 ' represent the proportion of the dataset'
+                                                                 ' to include in the train split.'))
+                self.check_train_size()
+            except ValueError:
+                st.sidebar.markdown(":red[__Error: The train size must be a number between 0.0 and 1.0__]")
+
             self.model_type = self.get_model_type()
 
-            if self.model_type == 'Classification':
+            preprocessing = Preprocessing(self.dataframe,
+                                          train_size=self.train_size,
+                                          random_state=self.random_state)
+            # TODO/ A enlever du final
+            st.dataframe(self.dataframe)
+
+            self.dataframe = preprocessing.df
+            # TODO: A enlever du final
+            st.dataframe(self.dataframe)
+
+            self.model = st.sidebar.selectbox("_Model:_", structure[self.model_type].keys())
+
+            '''if self.model_type == 'Classification':
                 self.model = st.sidebar.selectbox("_Model:_", ["ClassificationTree", "RandomForest"])
             if self.model_type == 'Regression':
-                self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])
+                self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])'''
 
-            self.hyperparameters_list = model()[self.model_type][self.model]['hyperparameters']
+            if self.model_type:
+                # TODO: Prendre le dict d'hyperperametres
+                self.hyperparameters_list = structure[self.model_type][self.model]['hyperparameters'].keys()
+                # TODO: Mettre sous forme de dic {'nom': 'valeur'}
+                self.hyperparameters_values = []
 
-            self.hyperparameters_values = []
+                for hp in self.hyperparameters_list:
+                    # TODO: A appeler avec le modèle
+                    hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')
+                    self.hyperparameters_values.append(hp)
 
-            for hp in self.hyperparameters_list:
-                #TODO: A appeler avec le modèle
-                hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')
-                self.hyperparameters_values.append(hp)
-
-            if len(self.hyperparameters_values) == len(self.hyperparameters_list):
-                st.sidebar.text(self.hyperparameters_values)
+                if len(self.hyperparameters_values) == len(self.hyperparameters_list):
+                    st.sidebar.text(self.hyperparameters_values)
 
         finally:
             self.conn.close()
@@ -65,8 +97,11 @@ class AppWeb:
             headers.append(element[3])
         df = pd.DataFrame(data=data, columns=headers)
         df.set_index('id', inplace=True)
-        st.dataframe(df)
         return df
+
+    def check_train_size(self):
+        if self.train_size < 0 or self.train_size > 1:
+            raise ValueError
 
     def get_model_type(self):
         target_type = str(self.dataframe['target'].dtype)
@@ -77,7 +112,7 @@ class AppWeb:
 
 
 #TODO: A enlever avec l'instanciation du modele
-def model():
+'''def model():
     model_dic = {'Classification': {
                             "ClassificationTree": {'hyperparameters': ['a', 'b', 'c']},
                             "RandomForest": {'hyperparameters': ['d', 'e', 'f']}
@@ -87,7 +122,8 @@ def model():
                     "Ridge": {'hyperparameters': ['d', 'e', 'f']}
                             }
                  }
-    return model_dic
+    return model_dic'''
+
 
 def intro():
     return st.set_page_config(

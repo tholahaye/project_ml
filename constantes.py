@@ -8,8 +8,8 @@ import numpy as np
 #from sklearn.svm import SVC
 #import streamlit as st
 
-STRUCTURE = {
-    'classification': {
+structure = {
+    'Classification': {
         'Decision_Tree': {
             'model': DecisionTreeClassifier(),
             'hyperparameters': {
@@ -139,7 +139,7 @@ STRUCTURE = {
     #         'hyperparameters': {}
     #     },
     },
-    'regression': {
+    'Regression': {
         'Linear_Regression': {
             'model': LinearRegression(),
             'hyperparameters': {}
