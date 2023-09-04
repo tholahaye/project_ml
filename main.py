@@ -1,7 +1,7 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
-from lot2 import Preprocessing
+from lot2 import Preprocessing, MissingClassError
 from constantes import STRUCTURE
 
 
@@ -54,27 +54,34 @@ class AppWeb:
 
                 self.model_type = self.get_model_type()
 
-            preprocessing = Preprocessing(self.dataframe,
-                                          test_size=self.test_size,
-                                          random_state=self.random_state)
-            # TODO/ A enlever du final
-            st.dataframe(self.dataframe)
+            try:
+                preprocessing = Preprocessing(self.dataframe,
+                                              model_type= self.model_type,
+                                              test_size=self.test_size,
+                                              random_state=self.random_state)
+                # TODO: A enlever du final
+                st.dataframe(self.dataframe)
 
-            self.dataframe = preprocessing.df
-            # TODO: A enlever du final
-            st.dataframe(self.dataframe)
+                self.classes_set = preprocessing.classes_set  # TODO: Utiliser dans la creation du modele
 
-            self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
+                self.dataframe = preprocessing.df
+                # TODO: A enlever du final
+                st.dataframe(self.dataframe)
 
-            if self.model_type:
-                self.model_hyparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
-                self.hyperparameters_list = self.model_hyparameters.keys()
-                self.hyperparameters_values = dict()
+                self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
-                self.hyperparameters()
+                if self.model_type:
+                    self.model_hyparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
+                    self.hyperparameters_list = self.model_hyparameters.keys()
+                    self.hyperparameters_values = dict()
 
-                if len(self.hyperparameters_values) == len(self.hyperparameters_list):
-                    st.sidebar.text(self.hyperparameters_values)
+                    self.hyperparameters()
+
+                    if len(self.hyperparameters_values) == len(self.hyperparameters_list):
+                        st.sidebar.text(self.hyperparameters_values)
+
+            except MissingClassError:
+                st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
 
         finally:
             self.conn.close()
@@ -97,6 +104,13 @@ class AppWeb:
         df = pd.DataFrame(data=data, columns=headers)
         df.set_index('id', inplace=True)
         return df
+
+    def get_model_type(self):
+        target_type = str(self.dataframe['target'].dtype)
+        if target_type.startswith(('int', 'float')):
+            return "Regression"
+        else:
+            return "Classification"
 
     def hyperparameters(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
@@ -133,14 +147,6 @@ class AppWeb:
                                                        help=f"{self.model_hyparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
-
-
-    def get_model_type(self):
-        target_type = str(self.dataframe['target'].dtype)
-        if target_type.startswith(('int', 'float')):
-            return "Regression"
-        else:
-            return "Classification"
 
 
 if __name__ == '__main__':

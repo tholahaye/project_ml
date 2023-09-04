@@ -4,12 +4,14 @@ from sklearn.metrics import classification_report, mean_squared_error, mean_abso
 
 from constantes import STRUCTURE, TARGET
 
+
+# TODO: A enlever un fois classe creee
 df = pd.read_csv("data/diabete.csv")
 model_type = "Classification"
 #df = pd.read_csv("data/vin.csv")
 #model_type = "Regression"
 
-print("dataset:", df.head())
+print("dataset:", df.head())# TODO: A enlever un fois classe creee
 
 X = df.drop(columns=[TARGET])
 print("features:", X.head())
@@ -21,8 +23,10 @@ if model_type == "Classification":
     print("whole dataset classes:", classes)
     # Todo for check imbalanced dataset
 
-
+# TODO: A enlever un fois classe creee
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+
 if model_type == "Classification":
     classes_train = set(y_train.unique())
     if classes != classes_train:
