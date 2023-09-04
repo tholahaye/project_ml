@@ -113,11 +113,11 @@ class AppWeb:
                         if hp_show:
                             if self.model_hyparameters[hp]['max_value'] != float('inf'):
                                 hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=1,#self.model_hyparameters[hp]['min_value'],
+                                                           min_value=self.model_hyparameters[hp]['min_value'],
                                                            max_value=self.model_hyparameters[hp]['max_value'],)
                             else:
                                 hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=1)#self.model_hyparameters[hp]['min_value'])
+                                                           min_value=self.model_hyparameters[hp]['min_value'])
 
                     else:
                         if self.model_hyparameters[hp]['max_value'] != float('inf'):
