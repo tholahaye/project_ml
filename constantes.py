@@ -21,35 +21,35 @@ STRUCTURE = {
                 # splitter: {},
                 'max_depth': {
                     'type': int,
-                    'description': "(integer) The maximum depth of the tree",
+                    'description': "(positive integer) The maximum depth of the tree",
                     'default': None,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    # 'values': None
                 },
                 'min_sample_split': {
                     'type': int,
-                    'description': "(integer) The minimum number of data objects required to split a node",
+                    'description': "(positive integer > 1) The minimum number of data objects required to split a node",
                     'default': 2,
-                    'min value': 2,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 2,
+                    'max_value': np.inf#,
+                    # 'values': None
                 },
                 'min_samples_leaf': {
                     'type': int,
-                    'description': "(integer) The minimum number of data objects required on leaves",
+                    'description': "(positive integer) The minimum number of data objects required on leaves",
                     'default': 1,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    # 'values': None
                 },
                 'max_leaf_nodes': {
                     'type': int,
-                    'description': "(integer) The maximum number of leaves",
+                    'description': "(positive integer) The maximum number of leaves",
                     'default': None,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    # 'values': None
                 }
             }
         },
@@ -58,19 +58,19 @@ STRUCTURE = {
             'hyperparameters': {
                 'n_estimators': {
                     'type': int,
-                    'description': "The number of trees",
+                    'description': "(positive integer) The number of trees",
                     'default': 100,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    # 'values': None
                 },
                 'max_features': {
                     'type': int,
-                    'description': "The number of features to sample on each tree",
+                    'description': "(positive integer) The number of features to sample on each tree",
                     'default': None, #TODO if none or empty char, then set to "sqrt"
                     'min value': 1,
-                    'max_value': np.inf, #TODO len(df.columns),
-                    'values': None
+                    'max_value': np.inf, #TODO len(df.columns) #,
+                    # 'values': None
                 },
                 'criterion': {
                     'type': str,
@@ -80,35 +80,35 @@ STRUCTURE = {
                 # splitter: {},
                 'max_depth': {  #The maximum depth of the tree
                     'type': int,
-                    'description': "(integer) The maximum tree depth",
+                    'description': "(positive integer) The maximum tree depth",
                     'default': None,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    #'values': None
                 },
                 'min_sample_split': {
                     'type': int,
-                    'description': "(integer) The minimum number of data objects required to split a node",
+                    'description': "(positive integer > 1) The minimum number of data objects required to split a node",
                     'default': 2,
-                    'min value': 2,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 2,
+                    'max_value': np.inf#,
+                    #'values': None
                 },
                 'min_samples_leaf': {
                     'type': int,
-                    'description': "(integer) The minimum number of data objects required on leaves",
+                    'description': "(positive integer) The minimum number of data objects required on leaves",
                     'default': 1,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    #'values': None
                 },
                 'max_leaf_nodes': {
                     'type': int,
-                    'description': "(integer) The maximum number of leaves",
+                    'description': "(positive integer) The maximum number of leaves",
                     'default': None,
-                    'min value': 1,
-                    'max_value': np.inf,
-                    'values': None
+                    'min_value': 1,
+                    'max_value': np.inf#,
+                    #'values': None
                 }
             }
         }
@@ -148,8 +148,12 @@ STRUCTURE = {
             'model': Ridge(),
             'hyperparameters': {
                 'alpha': {
-                    'type': int,
-                    'values': [0, 1, 100],
+                    'type': float(32),
+                    'description': "(non negative float) Regularization constant, use linear regression instead of 0",
+                    'default': 1,
+                    'min_value': 0,
+                    'max_value': np.inf#,
+                    # 'values': [0, 1, 100]
                 },
             }
         },
