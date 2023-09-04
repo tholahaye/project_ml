@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression, Ridge
 #import streamlit as st
 TARGET = 'target'
 
-structure = {
+STRUCTURE = {
     'Classification': {
         'Decision_Tree': {
             'model': DecisionTreeClassifier(),

@@ -2,7 +2,7 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 from lot2 import Preprocessing
-from constantes import structure
+from constantes import STRUCTURE
 
 
 class AppWeb:
@@ -32,24 +32,27 @@ class AppWeb:
 
             self.dataframe = self.df_creation()
 
-            try:
-                self.random_state = int(st.sidebar.number_input("Random state:",
-                                                                min_value=0,
-                                                                step=1,
-                                                                help='Write an integer. It controls the '
-                                                                'shuffling applied to the data before'
-                                                                ' applying the split.'))
-            except ValueError:
-                st.sidebar.markdown(':red[__Error: The selected random state must be an integer__]')
+            with st.sidebar.expander(':blue[__Parameters__]'):
+                try:
+                    self.random_state = int(st.number_input("Random state:",
+                                                            value=42,
+                                                            min_value=0,
+                                                            step=1,
+                                                            help='Write an integer. It controls the '
+                                                            'shuffling applied to the data before'
+                                                            ' applying the split.'))
+                except ValueError:
+                    st.markdown(':red[__Error: The selected random state must be an integer__]')
 
-            self.test_size = float(st.sidebar.number_input("Train size:",
-                                                           min_value=0.01,
-                                                           max_value=0.99,
-                                                           help='Write a number between 0.0 and 1.0 and'
-                                                           ' represent the proportion of the dataset'
-                                                           ' to include in the test split.'))
+                self.test_size = float(st.number_input("Train size:",
+                                                       value=0.2,
+                                                       min_value=0.01,
+                                                       max_value=0.99,
+                                                       help='Write a number between 0.0 and 1.0 and'
+                                                       ' represent the proportion of the dataset'
+                                                       ' to include in the test split.'))
 
-            self.model_type = self.get_model_type()
+                self.model_type = self.get_model_type()
 
             preprocessing = Preprocessing(self.dataframe,
                                           test_size=self.test_size,
@@ -61,31 +64,14 @@ class AppWeb:
             # TODO: A enlever du final
             st.dataframe(self.dataframe)
 
-            self.model = st.sidebar.selectbox("_Model:_", structure[self.model_type].keys())
+            self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
             if self.model_type:
-                self.model_hyparameters = structure[self.model_type][self.model]['hyperparameters']
+                self.model_hyparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
                 self.hyperparameters_list = self.model_hyparameters.keys()
                 self.hyperparameters_values = dict()
 
-                for hp in self.hyperparameters_list:
-                    if self.model_hyparameters[hp]['type'] == 'str':
-                        hp_value = st.sidebar.selectbox(f"Hyperparameter {hp}:",
-                                                        self.model_hyparameters[hp]['values'],
-                                                        help=f"{self.model_hyparameters[hp]['description']}")
-                    if self.model_hyparameters[hp]['type'] in ['int', 'float']:
-                        if self.model_hyparameters[hp]['max_value'] != float('inf'):
-                            hp_value = st.sidebar.number_input(label=f"Hyperparameter {hp}:",
-                                                               min_value=self.model_hyparameters[hp]['min_value'],
-                                                               max_value=self.model_hyparameters[hp]['max_value'],
-                                                               help=f"{self.model_hyparameters[hp]['description']}")
-                        else:
-                            hp_value = st.sidebar.number_input(label=f"Hyperparameter {hp}:",
-                                                               min_value=self.model_hyparameters[hp]['min_value'],
-                                                               help=f"{self.model_hyparameters[hp]['description']}")
-
-                    if hp_value:
-                        self.hyperparameters_values[hp] = hp_value
+                self.hyperparameters()
 
                 if len(self.hyperparameters_values) == len(self.hyperparameters_list):
                     st.sidebar.text(self.hyperparameters_values)
@@ -112,13 +98,49 @@ class AppWeb:
         df.set_index('id', inplace=True)
         return df
 
+    def hyperparameters(self):
+        with st.sidebar.expander(":blue[__Hyperparameters__]"):
+            for hp in self.hyperparameters_list:
+                if self.model_hyparameters[hp]['type'] == 'str':
+                    hp_value = st.selectbox(f"Hyperparameter {hp}:",
+                                            self.model_hyparameters[hp]['values'],
+                                            help=f"{self.model_hyparameters[hp]['description']}")
+                if self.model_hyparameters[hp]['type'] in ['int', 'float']:
+                    if self.model_hyparameters[hp]['optional']:
+                        hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
+                                              value=False,
+                                              help=f"{self.model_hyparameters[hp]['description']}")
+                        if hp_show:
+                            if self.model_hyparameters[hp]['max_value'] != float('inf'):
+                                hp_value = st.number_input(label=f"Value {hp}:",
+                                                           min_value=1,#self.model_hyparameters[hp]['min_value'],
+                                                           max_value=self.model_hyparameters[hp]['max_value'],)
+                            else:
+                                hp_value = st.number_input(label=f"Value {hp}:",
+                                                           min_value=1)#self.model_hyparameters[hp]['min_value'])
+
+                    else:
+                        if self.model_hyparameters[hp]['max_value'] != float('inf'):
+                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                                       value=self.model_hyparameters[hp]['default'],
+                                                       min_value=self.model_hyparameters[hp]['min_value'],
+                                                       max_value=self.model_hyparameters[hp]['max_value'],
+                                                       help=f"{self.model_hyparameters[hp]['description']}")
+                        else:
+                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                                       value=self.model_hyparameters[hp]['default'],
+                                                       min_value=self.model_hyparameters[hp]['min_value'],
+                                                       help=f"{self.model_hyparameters[hp]['description']}")
+
+                self.hyperparameters_values[hp] = hp_value
+
+
     def get_model_type(self):
         target_type = str(self.dataframe['target'].dtype)
         if target_type.startswith(('int', 'float')):
             return "Regression"
         else:
             return "Classification"
-
 
 
 if __name__ == '__main__':

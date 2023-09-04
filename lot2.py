@@ -47,9 +47,9 @@ class Preprocessing:
         pass
 
     def scaler(self):
-        pass  # TODO: A enlever dans le final
+        #pass  # TODO: A enlever dans le final
         scaler = StandardScaler()
-        self.X_df = scaler.fit_transform(self.X_df, self.y_df)
+        self.df = scaler.fit_transform(self.X_df, self.y_df)
 
     # TODO: Utile ?
     def outliers(self, contamination=0.05):
