@@ -1,15 +1,21 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
-from streamlit_option_menu import option_menu
+from lot2 import Preprocessing
+from constantes import structure
 
 
 class AppWeb:
 
     def __init__(self):
+        st.set_page_config(
+            page_title="ML Playground",
+            layout="centered",
+            initial_sidebar_state="auto"
+        )
 
-        intro()
         st.title("Welcome")
+
         try:
             self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
                                          database="d4on6t2qk9dj5a",
@@ -20,30 +26,56 @@ class AppWeb:
 
             self.table_names_list = self.get_table_names()
 
-            st.sidebar.caption(":red[__Choose the parameters:__]")
+            st.sidebar.caption(":green[__Choose the parameters:__]")
 
-            self.dataset_name = st.sidebar.selectbox("_Datasets:_", self.table_names_list)
+            self.dataset_name = st.sidebar.selectbox("_Dataset:_", self.table_names_list)
 
             self.dataframe = self.df_creation()
 
+            try:
+                self.random_state = int(st.sidebar.number_input("Random state:",
+                                                                min_value=0,
+                                                                step=1,
+                                                                help='Write an integer. It controls the '
+                                                                'shuffling applied to the data before'
+                                                                ' applying the split.'))
+            except ValueError:
+                st.sidebar.markdown(':red[__Error: The selected random state must be an integer__]')
+
+            self.test_size = float(st.sidebar.number_input("Train size:",
+                                                           min_value=0.01,
+                                                           max_value=0.99,
+                                                           help='Write a number between 0.0 and 1.0 and'
+                                                           ' represent the proportion of the dataset'
+                                                           ' to include in the test split.'))
+
             self.model_type = self.get_model_type()
 
-            if self.model_type == 'Classification':
-                self.model = st.sidebar.selectbox("_Model:_", ["ClassificationTree", "RandomForest"])
-            if self.model_type == 'Regression':
-                self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])
+            preprocessing = Preprocessing(self.dataframe,
+                                          test_size=self.test_size,
+                                          random_state=self.random_state)
+            # TODO/ A enlever du final
+            st.dataframe(self.dataframe)
 
-            self.hyperparameters_list = model()[self.model_type][self.model]['hyperparameters']
+            self.dataframe = preprocessing.df
+            # TODO: A enlever du final
+            st.dataframe(self.dataframe)
 
-            self.hyperparameters_values = []
+            self.model = st.sidebar.selectbox("_Model:_", structure[self.model_type].keys())
 
-            for hp in self.hyperparameters_list:
-                #TODO: A appeler avec le modèle
-                hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')
-                self.hyperparameters_values.append(hp)
+            if self.model_type:
+                self.model_hyparameters = structure[self.model_type][self.model]['hyperparameters']
+                self.hyperparameters_list = self.model_hyparameters.keys()
+                self.hyperparameters_values = dict()
 
-            if len(self.hyperparameters_values) == len(self.hyperparameters_list):
-                st.sidebar.text(self.hyperparameters_values)
+                for hp in self.hyperparameters_list:
+                    # TODO: A appeler avec le modèle
+                    hp_value = st.sidebar.text_input(f"Hyperparameter {hp}:",
+                                                     help=f"{self.model_hyparameters[hp]['description']}")
+                    self.hyperparameters_values[hp] = hp_value
+
+                if len(self.hyperparameters_values) == len(self.hyperparameters_list):
+                    st.sidebar.text(self.hyperparameters_values)
 
         finally:
             self.conn.close()
@@ -65,7 +97,6 @@ class AppWeb:
             headers.append(element[3])
         df = pd.DataFrame(data=data, columns=headers)
         df.set_index('id', inplace=True)
-        st.dataframe(df)
         return df
 
     def get_model_type(self):
@@ -76,25 +107,5 @@ class AppWeb:
             return "Classification"
 
 
-#TODO: A enlever avec l'instanciation du modele
-def model():
-    model_dic = {'Classification': {
-                            "ClassificationTree": {'hyperparameters': ['a', 'b', 'c']},
-                            "RandomForest": {'hyperparameters': ['d', 'e', 'f']}
-                            },
-                 'Regression': {
-                    "LinearRegression": {'hyperparameters': ['a', 'b', 'c']},
-                    "Ridge": {'hyperparameters': ['d', 'e', 'f']}
-                            }
-                 }
-    return model_dic
-
-def intro():
-    return st.set_page_config(
-        page_title="ML Playground",
-        layout="centered",
-        initial_sidebar_state="auto"
-    )
-
-
-App = AppWeb()
+if __name__ == '__main__':
+    AppWeb()

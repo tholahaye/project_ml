@@ -7,12 +7,12 @@ from sklearn.model_selection import train_test_split
 
 class Preprocessing:
 
-    def __init__(self, dataframe, split_rate=0.2, random_state=42):
+    def __init__(self, dataframe, test_size=0.2, random_state=42):
 
         # TODO: Verifier l'utilite de garder l'original
         self.df_original = dataframe
         self.df = dataframe
-        self.split_rate = split_rate
+        self.test_size = test_size
         self.random_state = random_state
 
         self.remove_nan()
@@ -26,7 +26,7 @@ class Preprocessing:
 
         self.X_train, self.X_test, \
             self.y_train, self.y_test = train_test_split(self.X_df, self.y_df,
-                                                         test_size=self.split_rate,
+                                                         test_size=self.test_size,
                                                          random_state=self.random_state)
 
     # TODO: Gerer les NaN
@@ -37,18 +37,19 @@ class Preprocessing:
         # TODO: Encodage
     def encoder(self):
         le = LabelEncoder()
-        for column in self.df.column:
+        for column in self.df.columns:
             if str(self.df.dtypes[column]) == 'object':
                 le.fit(self.df[column].unique())
                 self.df[column] = le.transform(self.df[column])
 
-        #TODO: Elimination des outliers
+        # TODO: Elimination des outliers
     def remove_outliers(self):
         pass
 
     def scaler(self):
+        pass  # TODO: A enlever dans le final
         scaler = StandardScaler()
-        self.df = scaler.fit_transform(self.X_df, self.y_df)
+        self.X_df = scaler.fit_transform(self.X_df, self.y_df)
 
     # TODO: Utile ?
     def outliers(self, contamination=0.05):
