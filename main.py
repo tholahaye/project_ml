@@ -33,26 +33,26 @@ class AppWeb:
             self.dataframe = self.df_creation()
 
             try:
-                self.random_state = int(st.sidebar.text_input("Random state:",
-                                                              help='Write an integer. It controls the '
-                                                              'shuffling applied to the data before'
-                                                              ' applying the split.'))
+                self.random_state = int(st.sidebar.number_input("Random state:",
+                                                                min_value=0,
+                                                                step=1,
+                                                                help='Write an integer. It controls the '
+                                                                'shuffling applied to the data before'
+                                                                ' applying the split.'))
             except ValueError:
                 st.sidebar.markdown(':red[__Error: The selected random state must be an integer__]')
 
-            try:
-                self.train_size = float(st.sidebar.text_input("Train size:",
-                                                              help='Write a number between 0.0 and 1.0 and'
-                                                              ' represent the proportion of the dataset'
-                                                              ' to include in the train split.'))
-                self.check_train_size()
-            except ValueError:
-                st.sidebar.markdown(":red[__Error: The train size must be a number between 0.0 and 1.0__]")
+            self.test_size = float(st.sidebar.number_input("Train size:",
+                                                           min_value=0.01,
+                                                           max_value=0.99,
+                                                           help='Write a number between 0.0 and 1.0 and'
+                                                           ' represent the proportion of the dataset'
+                                                           ' to include in the test split.'))
 
             self.model_type = self.get_model_type()
 
             preprocessing = Preprocessing(self.dataframe,
-                                          train_size=self.train_size,
+                                          test_size=self.test_size,
                                           random_state=self.random_state)
             # TODO/ A enlever du final
             st.dataframe(self.dataframe)
@@ -64,16 +64,14 @@ class AppWeb:
             self.model = st.sidebar.selectbox("_Model:_", structure[self.model_type].keys())
 
             if self.model_type:
-                # TODO: Prendre le dict d'hyperperametres
-                self.hyperparameters_list = structure[self.model_type][self.model]['hyperparameters'].keys()
-                # TODO: Mettre sous forme de dic {'nom': 'valeur'}
+                self.model_hyparameters = structure[self.model_type][self.model]['hyperparameters']
+                self.hyperparameters_list = self.model_hyparameters.keys()
                 self.hyperparameters_values = dict()
 
                 for hp in self.hyperparameters_list:
                     # TODO: A appeler avec le modèle
                     hp_value = st.sidebar.text_input(f"Hyperparameter {hp}:",
-                                               help=f"""{structure[self.model_type][self.model]
-                                                            ['hyperparameters'][hp]['description']}""")
+                                                     help=f"{self.model_hyparameters[hp]['description']}")
                     self.hyperparameters_values[hp] = hp_value
 
                 if len(self.hyperparameters_values) == len(self.hyperparameters_list):
@@ -100,10 +98,6 @@ class AppWeb:
         df = pd.DataFrame(data=data, columns=headers)
         df.set_index('id', inplace=True)
         return df
-
-    def check_train_size(self):
-        if self.train_size < 0 or self.train_size > 1:
-            raise ValueError
 
     def get_model_type(self):
         target_type = str(self.dataframe['target'].dtype)
