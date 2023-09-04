@@ -8,7 +8,12 @@ from constantes import structure
 class AppWeb:
 
     def __init__(self):
-        intro()
+        st.set_page_config(
+            page_title="ML Playground",
+            layout="centered",
+            initial_sidebar_state="auto"
+        )
+
         st.title("Welcome")
 
         try:
@@ -21,9 +26,9 @@ class AppWeb:
 
             self.table_names_list = self.get_table_names()
 
-            st.sidebar.caption(":red[__Choose the parameters:__]")
+            st.sidebar.caption(":green[__Choose the parameters:__]")
 
-            self.dataset_name = st.sidebar.selectbox("_Datasets:_", self.table_names_list)
+            self.dataset_name = st.sidebar.selectbox("_Dataset:_", self.table_names_list)
 
             self.dataframe = self.df_creation()
 
@@ -37,9 +42,9 @@ class AppWeb:
 
             try:
                 self.train_size = float(st.sidebar.text_input("Train size:",
-                                                            help='Write a number between 0.0 and 1.0 and'
-                                                                 ' represent the proportion of the dataset'
-                                                                 ' to include in the train split.'))
+                                                              help='Write a number between 0.0 and 1.0 and'
+                                                              ' represent the proportion of the dataset'
+                                                              ' to include in the train split.'))
                 self.check_train_size()
             except ValueError:
                 st.sidebar.markdown(":red[__Error: The train size must be a number between 0.0 and 1.0__]")
@@ -58,21 +63,18 @@ class AppWeb:
 
             self.model = st.sidebar.selectbox("_Model:_", structure[self.model_type].keys())
 
-            '''if self.model_type == 'Classification':
-                self.model = st.sidebar.selectbox("_Model:_", ["ClassificationTree", "RandomForest"])
-            if self.model_type == 'Regression':
-                self.model = st.sidebar.selectbox("_Model:_", ["LinearRegression", "Ridge"])'''
-
             if self.model_type:
                 # TODO: Prendre le dict d'hyperperametres
                 self.hyperparameters_list = structure[self.model_type][self.model]['hyperparameters'].keys()
                 # TODO: Mettre sous forme de dic {'nom': 'valeur'}
-                self.hyperparameters_values = []
+                self.hyperparameters_values = dict()
 
                 for hp in self.hyperparameters_list:
                     # TODO: A appeler avec le modèle
-                    hp = st.sidebar.text_input(f"Hyperparameter {hp}:", help='Hyperparameter descriptive')
-                    self.hyperparameters_values.append(hp)
+                    hp_value = st.sidebar.text_input(f"Hyperparameter {hp}:",
+                                               help=f"""{structure[self.model_type][self.model]
+                                                            ['hyperparameters'][hp]['description']}""")
+                    self.hyperparameters_values[hp] = hp_value
 
                 if len(self.hyperparameters_values) == len(self.hyperparameters_list):
                     st.sidebar.text(self.hyperparameters_values)
@@ -111,26 +113,5 @@ class AppWeb:
             return "Classification"
 
 
-#TODO: A enlever avec l'instanciation du modele
-'''def model():
-    model_dic = {'Classification': {
-                            "ClassificationTree": {'hyperparameters': ['a', 'b', 'c']},
-                            "RandomForest": {'hyperparameters': ['d', 'e', 'f']}
-                            },
-                 'Regression': {
-                    "LinearRegression": {'hyperparameters': ['a', 'b', 'c']},
-                    "Ridge": {'hyperparameters': ['d', 'e', 'f']}
-                            }
-                 }
-    return model_dic'''
-
-
-def intro():
-    return st.set_page_config(
-        page_title="ML Playground",
-        layout="centered",
-        initial_sidebar_state="auto"
-    )
-
-
-App = AppWeb()
+if __name__ == '__main__':
+    AppWeb()
