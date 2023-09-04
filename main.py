@@ -69,10 +69,23 @@ class AppWeb:
                 self.hyperparameters_values = dict()
 
                 for hp in self.hyperparameters_list:
-                    # TODO: A appeler avec le modèle
-                    hp_value = st.sidebar.text_input(f"Hyperparameter {hp}:",
-                                                     help=f"{self.model_hyparameters[hp]['description']}")
-                    self.hyperparameters_values[hp] = hp_value
+                    if self.model_hyparameters[hp]['type'] == 'str':
+                        hp_value = st.sidebar.selectbox(f"Hyperparameter {hp}:",
+                                                        self.model_hyparameters[hp]['values'],
+                                                        help=f"{self.model_hyparameters[hp]['description']}")
+                    if self.model_hyparameters[hp]['type'] in ['int', 'float']:
+                        if self.model_hyparameters[hp]['max_value'] != float('inf'):
+                            hp_value = st.sidebar.number_input(label=f"Hyperparameter {hp}:",
+                                                               min_value=self.model_hyparameters[hp]['min_value'],
+                                                               max_value=self.model_hyparameters[hp]['max_value'],
+                                                               help=f"{self.model_hyparameters[hp]['description']}")
+                        else:
+                            hp_value = st.sidebar.number_input(label=f"Hyperparameter {hp}:",
+                                                               min_value=self.model_hyparameters[hp]['min_value'],
+                                                               help=f"{self.model_hyparameters[hp]['description']}")
+
+                    if hp_value:
+                        self.hyperparameters_values[hp] = hp_value
 
                 if len(self.hyperparameters_values) == len(self.hyperparameters_list):
                     st.sidebar.text(self.hyperparameters_values)
@@ -105,6 +118,7 @@ class AppWeb:
             return "Regression"
         else:
             return "Classification"
+
 
 
 if __name__ == '__main__':
