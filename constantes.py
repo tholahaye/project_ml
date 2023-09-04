@@ -49,7 +49,7 @@ STRUCTURE = {
                     'description': "(positive integer) The maximum number of leaves",
                     'optional': True,
                     'default': None,
-                    'min_value': 1,
+                    'min_value': 2,
                     'max_value': float('inf')
                 }
             }

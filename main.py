@@ -2,6 +2,7 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 from lot2 import Preprocessing, MissingClassError
+from ml import MachineLearning
 from constantes import STRUCTURE
 
 
@@ -44,7 +45,7 @@ class AppWeb:
                 except ValueError:
                     st.markdown(':red[__Error: The selected random state must be an integer__]')
 
-                self.test_size = float(st.number_input("Train size:",
+                self.test_size = float(st.number_input("Test size:",
                                                        value=0.2,
                                                        min_value=0.01,
                                                        max_value=0.99,
@@ -59,6 +60,10 @@ class AppWeb:
                                               model_type= self.model_type,
                                               test_size=self.test_size,
                                               random_state=self.random_state)
+                self.X_train = preprocessing.X_train
+                self.X_test =  preprocessing.X_test
+                self.y_train = preprocessing.y_train
+                self.y_test = preprocessing.y_test
                 # TODO: A enlever du final
                 st.dataframe(self.dataframe)
 
@@ -82,6 +87,16 @@ class AppWeb:
 
             except MissingClassError:
                 st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
+
+            self.ml = MachineLearning(model_type= self.model_type,
+                            model_name=self.model,
+                            hyper_params=self.hyperparameters_values,
+                            X_train=self.X_train,
+                            X_test=self.X_test,
+                            y_train=self.y_train,
+                            y_test=self.y_test,
+                            classes=self.classes_set)
+            st.dataframe(self.ml.tab_eval)
 
         finally:
             self.conn.close()
