@@ -1,8 +1,7 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
-import plotly.figure_factory as ff
-from lot2 import Preprocessing, MissingClassError
+from preprocessing import Preprocessing, MissingClassError
 from ml import MachineLearning
 from constantes import STRUCTURE
 
@@ -38,7 +37,7 @@ class AppWeb:
 
             self.dataframe = self.df_creation()
 
-            with st.sidebar.expander(':blue[__Parameters__]'):
+            with st.sidebar.expander(':blue[__Preprocessing parameters__]'):
                 try:
                     self.random_state = int(st.number_input("Random state:",
                                                             value=42,
@@ -91,7 +90,7 @@ class AppWeb:
                 with st.expander("Original dataframe"):
                     st.dataframe(self.dataframe)
                     # TODO: Afficher le graph de la matrice de corrélation
-                    #st.plotly(preprocessing.cr_matrix)
+                    #st.pyplot(preprocessing.cr_matrix)
 
                 self.dataframe = preprocessing.df
 
@@ -101,6 +100,7 @@ class AppWeb:
                 with st.expander("Processed dataframe"):
                     st.dataframe(self.dataframe)
 
+                # TODO: A enlever du final
                 with st.expander("Train/test"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
@@ -111,6 +111,20 @@ class AppWeb:
 
                 self.cross_val = st.sidebar.toggle('Cross-validation',
                                                    help='Help cross-validation')  # TODO: Help cross_val
+                if self.cross_val:
+                    with st.sidebar.expander(':blue[__Cross-validation parameters__]'):
+                        try:
+                            self.random_state = int(st.number_input("Fold number:",
+                                                                    value=5,
+                                                                    min_value=2,
+                                                                    step=1,
+                                                                    # TODO: A completer
+                                                                    help='Choose or write an integer. It controls the '
+                                                                         'number of folds'
+                                                                         ' applied to the model.'))
+                        except ValueError:
+                            st.markdown(':red[__Error: The number of fold must be an integer__]')
+
 
                 if self.model_type:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
@@ -140,7 +154,7 @@ class AppWeb:
                     if self.model_type == 'Classification':
                         pass
                         # TODO: Affichage de la matrice de confusion en graph
-                        #st.plotly_chart(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+                        #st.pyplot(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
 
 
             except AttributeError:
@@ -181,8 +195,8 @@ class AppWeb:
             for hp in self.hyperparameters_list:
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value = st.multiselect(f"Hyperparameter {hp}:",
-                                            self.model_hyperparameters[hp]['values'],
-                                            help=f"{self.model_hyperparameters[hp]['description']}")
+                                              self.model_hyperparameters[hp]['values'],
+                                              help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
@@ -238,7 +252,6 @@ class AppWeb:
                             st.markdown(":red[__Error: You must enter at least one value.__]")
                         hp_value = list(filter(None, hp_value))
                 self.hyperparameters_values[hp] = hp_value
-
 
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
