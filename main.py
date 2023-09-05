@@ -1,6 +1,7 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
+import plotly.figure_factory as ff
 from lot2 import Preprocessing, MissingClassError
 from ml import MachineLearning
 from constantes import STRUCTURE
@@ -15,7 +16,7 @@ class AppWeb:
             initial_sidebar_state="auto"
         )
 
-        st.title("Welcome")
+        st.title("Bienvenue chez les dauphins de Chine !")
 
         try:
             self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
@@ -68,7 +69,9 @@ class AppWeb:
                 self.model_type = self.get_model_type()
 
             try:
-                # *******************************************************************************************
+
+                # Preprocessing **************************************************************************************
+                # TODO: Try/Except sur AttributeError?
                 preprocessing = Preprocessing(self.dataframe,
                                               model_type=self.model_type,
                                               test_size=self.test_size,
@@ -83,6 +86,8 @@ class AppWeb:
 
                 with st.expander("Original dataframe"):
                     st.dataframe(self.dataframe)
+                    # TODO: Afficher le graph de la matrice de corrélation
+                    #st.plotly(preprocessing.cr_matrix)
 
                 self.dataframe = preprocessing.df
 
@@ -93,7 +98,6 @@ class AppWeb:
                     st.dataframe(self.dataframe)
 
                 with st.expander("Train/test"):
-                    st.text(self.classes_set)
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
                     st.dataframe(preprocessing.y_train)
@@ -101,31 +105,44 @@ class AppWeb:
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
-                if self.model_type:
-                    self.model_hyparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
-                    self.hyperparameters_list = self.model_hyparameters.keys()
-                    self.hyperparameters_values = dict()
+                self.cross_val = st.sidebar.toggle('Cross-validation',
+                                                   help='Help cross-validation')  # TODO: Help cross_val
 
-                    self.hyperparameter_setting()
+                if self.model_type:
+                    self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
+                    self.hyperparameters_list = self.model_hyperparameters.keys()
+                    self.hyperparameters_values = dict()
+                    if self.cross_val:
+                        self.hyperparameter_setting_crossval()
+                    else:
+                        self.hyperparameter_setting()
 
             except MissingClassError:
                 st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
-            #  *****************************************************************************************************
-            self.ml = MachineLearning(model_type= self.model_type,
-                            model_name=self.model,
-                            hyper_params=self.hyperparameters_values,
-                            X_train=self.X_train,
-                            X_test=self.X_test,
-                            y_train=self.y_train,
-                            y_test=self.y_test,
-                            classes=self.classes_set)
-            with st.expander("Evaluation"):
-                st.dataframe(self.ml.tab_eval)
-                if self.model_type == 'Classification':
-                    pass
-                    # TODO: Affichage de la matrice en graph
-                    #st.plotly_chart(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
 
+            #  Machine learning *******************************************************************************
+            # TODO: Try/Except sur AttributeError?
+            try:
+                self.ml = MachineLearning(model_type=self.model_type,
+                                          model_name=self.model,
+                                          hyper_params=self.hyperparameters_values,
+                                          X_train=self.X_train,
+                                          X_test=self.X_test,
+                                          y_train=self.y_train,
+                                          y_test=self.y_test,
+                                          classes=self.classes_set,
+                                          cross_val=self.cross_val)
+                with st.expander("Evaluation"):
+                    st.dataframe(self.ml.tab_eval)
+                    if self.model_type == 'Classification':
+                        pass
+                        # TODO: Affichage de la matrice de confusion en graph
+                        #st.plotly_chart(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+
+
+            except AttributeError:
+                # TODO: Compléter le rapport d'erreur
+                st.markdown(":red[__Oopsie!__]")
 
         finally:
             self.conn.close()
@@ -156,44 +173,113 @@ class AppWeb:
         else:
             return "Classification"
 
+    def hyperparameter_setting_crossval(self):
+        with st.sidebar.expander(":blue[__Hyperparameters__]"):
+            for hp in self.hyperparameters_list:
+                if self.model_hyperparameters[hp]['type'] == 'str':
+                    hp_value = st.multiselect(f"Hyperparameter {hp}:",
+                                            self.model_hyperparameters[hp]['values'],
+                                            help=f"{self.model_hyperparameters[hp]['description']}")
+                if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
+                    if self.model_hyperparameters[hp]['optional']:
+                        hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
+                                              value=False,
+                                              help=f"{self.model_hyperparameters[hp]['description']}")
+                        if not hp_show:
+                            hp_value = None
+
+                    if not self.model_hyperparameters[hp]['optional'] or hp_show:
+                        hp_value = st.text_input(label=f"Hyperparameter {hp}:",
+                                                 value=self.model_hyperparameters[hp]['default'],
+                                                 help=f"{self.model_hyperparameters[hp]['description']}."
+                                                 "Separate the wanted values by ';'.")
+
+                        # TODO: Parse l'input
+                        hp_value = hp_value.split(';')
+                        for value in hp_value:
+                            value = value.strip()
+                            if value == '' and len(hp_value) != 0:
+                                hp_value.remove('')
+                                continue
+
+                            hp_type = self.model_hyperparameters[hp]['type']
+                            try:
+                                if hp_type == 'int':
+                                    value = int(value)
+                                elif hp_type == 'float':
+                                    value = float(value)
+                            except ValueError:
+                                st.markdown(f":red[__Error: You must "
+                                            f"type a list of {hp_type} separated by ';'.__]")
+
+                            try:
+                                min_hp = self.model_hyperparameters[hp]['min_value']
+                                if min_hp > value:
+                                    raise InferiorToMinError
+                            except KeyError:
+                                pass
+                            except InferiorToMinError:
+                                st.markdown(f":red[__Error: Your values must be superior or equal to {min_hp}.__]")
+
+                            try:
+                                max_hp = self.model_hyperparameters[hp]['max_value']
+                                if max_hp < value:
+                                    raise SuperiorToMaxError
+                            except KeyError:
+                                pass
+                            except SuperiorToMaxError:
+                                st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
+                        if len(hp_value) == 0:
+                            st.markdown(f":red[__Error: You must enter at least one value.__]")
+
+                    self.hyperparameters_values[hp] = hp_value
+
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
-                if self.model_hyparameters[hp]['type'] == 'str':
+                if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value = st.selectbox(f"Hyperparameter {hp}:",
-                                            self.model_hyparameters[hp]['values'],
-                                            help=f"{self.model_hyparameters[hp]['description']}")
-                if self.model_hyparameters[hp]['type'] in ['int', 'float']:
-                    if self.model_hyparameters[hp]['optional']:
+                                            self.model_hyperparameters[hp]['values'],
+                                            help=f"{self.model_hyperparameters[hp]['description']}")
+                if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
+                    if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
-                                              help=f"{self.model_hyparameters[hp]['description']}")
+                                              help=f"{self.model_hyperparameters[hp]['description']}")
                         if not hp_show:
                             hp_value = None
 
                         else:
-                            if self.model_hyparameters[hp]['max_value'] != float('inf'):
+                            if self.model_hyperparameters[hp]['max_value'] != float('inf'):
                                 hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyparameters[hp]['min_value'],
-                                                           max_value=self.model_hyparameters[hp]['max_value'],)
+                                                           min_value=self.model_hyperparameters[hp]['min_value'],
+                                                           max_value=self.model_hyperparameters[hp]['max_value'],)
                             else:
                                 hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyparameters[hp]['min_value'])
+                                                           min_value=self.model_hyperparameters[hp]['min_value'])
 
                     else:
-                        if self.model_hyparameters[hp]['max_value'] != float('inf'):
+                        if self.model_hyperparameters[hp]['max_value'] != float('inf'):
                             hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyparameters[hp]['default'],
-                                                       min_value=self.model_hyparameters[hp]['min_value'],
-                                                       max_value=self.model_hyparameters[hp]['max_value'],
-                                                       help=f"{self.model_hyparameters[hp]['description']}")
+                                                       value=self.model_hyperparameters[hp]['default'],
+                                                       min_value=self.model_hyperparameters[hp]['min_value'],
+                                                       max_value=self.model_hyperparameters[hp]['max_value'],
+                                                       help=f"{self.model_hyperparameters[hp]['description']}")
                         else:
                             hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyparameters[hp]['default'],
-                                                       min_value=self.model_hyparameters[hp]['min_value'],
-                                                       help=f"{self.model_hyparameters[hp]['description']}")
+                                                       value=self.model_hyperparameters[hp]['default'],
+                                                       min_value=self.model_hyperparameters[hp]['min_value'],
+                                                       help=f"{self.model_hyperparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
+
+
+class InferiorToMinError(Exception):
+    pass
+
+
+class SuperiorToMaxError(Exception):
+    pass
 
 
 if __name__ == '__main__':

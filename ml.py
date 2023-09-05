@@ -8,27 +8,36 @@ from constantes import STRUCTURE
 
 
 class MachineLearning:
-    def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes):
+    def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes, cross_val):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
+        # TODO? Changer X_train, X_test, y_train, y_test en un seul dictionnaire
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
         self.y_test = y_test
-        self.classes = classes
-        self.model = STRUCTURE[self.model_type][self.model_name]["model"]
-        self.model.set_params(**self.hyper_params)
-        self.model = self.learning(X=self.X_train, y=self.y_train, model=self.model)
-        self.y_pred = self.predict(X=self.X_test, model=self.model)
 
-        if self.model_type == "Classification":
-            self.tab_eval = self.create_tab_eval_clf()
-            self.evaluate_clf()
-            self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
-        if self.model_type == "Regression":
-            self.tab_eval = create_tab_eval_reg()
-            self.evaluate_reg()
+        self.classes = classes
+        self.cross_val = cross_val
+
+        # TODO: *********************CROSS-VAL ICI********************************************
+        if self.cross_val:
+            pass
+        # TODO: ******************************************************************************
+        else:
+            self.model = STRUCTURE[self.model_type][self.model_name]["model"]
+            self.model.set_params(**self.hyper_params)
+            self.model = self.learning(X=self.X_train, y=self.y_train, model=self.model)
+            self.y_pred = self.predict(X=self.X_test, model=self.model)
+
+            if self.model_type == "Classification":
+                self.tab_eval = self.create_tab_eval_clf()
+                self.evaluate_clf()
+                self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
+            if self.model_type == "Regression":
+                self.tab_eval = create_tab_eval_reg()
+                self.evaluate_reg()
 
 
     def learning(self, X, y, model):
