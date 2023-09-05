@@ -4,7 +4,6 @@ from sklearn.metrics import classification_report, mean_squared_error,\
 
 from constantes import STRUCTURE
 
-#recupérer les classes, le model_type, model_name, self.hyper_params, X/y test & train
 
 
 class MachineLearning:
@@ -32,7 +31,7 @@ class MachineLearning:
             self.y_pred = self.predict(X=self.X_test, model=self.model)
 
             if self.model_type == "Classification":
-                self.tab_eval = self.create_tab_eval_clf()
+                self.tab_eval = create_tab_eval_clf()
                 self.evaluate_clf()
                 self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
             if self.model_type == "Regression":
@@ -48,11 +47,6 @@ class MachineLearning:
         y_pred = model.predict(X)
         return y_pred
 
-    def create_tab_eval_clf(self):
-        tab_eval = pd.DataFrame(
-            columns=["model", "hyperparameters", "fold", "classe",
-                     "accuracy", "precision", "recall", "f1-score"])
-        return tab_eval
 
     def evaluate_clf(self):
         report_dict = classification_report(self.y_test, self.y_pred, output_dict=True)
@@ -86,4 +80,10 @@ class MachineLearning:
 
 def create_tab_eval_reg():
     tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
+    return tab_eval
+
+def create_tab_eval_clf():
+    tab_eval = pd.DataFrame(
+        columns=["model", "hyperparameters", "fold", "classe",
+                 "accuracy", "precision", "recall", "f1-score"])
     return tab_eval
