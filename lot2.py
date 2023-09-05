@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 class MissingClassError(Exception):
     pass
 
+
 class Preprocessing:
 
     def __init__(self, dataframe, model_type, test_size=0.2, random_state=42):
@@ -20,12 +21,15 @@ class Preprocessing:
         self.random_state = random_state
 
         self.remove_nan()
+
+        if self.model_type == "Classification":
+            self.classes_set = set(self.df['target'].unique())
         self.encoder()
         self.remove_outliers()
 
         self.X_df = self.df.drop(columns=['target'])
         self.y_df = self.df['target']
-        self.classes_set = set(self.y_df.unique())
+
 
         self.scaler()
 
@@ -37,13 +41,13 @@ class Preprocessing:
         except MissingClassError:
             raise MissingClassError
 
-
     # TODO: Gerer les NaN
     def remove_nan(self):
 
         self.df = self.df.dropna()
 
         # TODO: Encodage
+
     def encoder(self):
         le = LabelEncoder()
         for column in self.df.columns:
@@ -52,11 +56,12 @@ class Preprocessing:
                 self.df[column] = le.transform(self.df[column])
 
         # TODO: Elimination des outliers
+
     def remove_outliers(self):
         pass
 
     def scaler(self):
-        #pass  # TODO: A enlever dans le final
+        # pass  # TODO: A enlever dans le final
         scaler = StandardScaler()
         self.df = scaler.fit_transform(self.X_df, self.y_df)
 
@@ -77,6 +82,3 @@ class Preprocessing:
             if classes != classes_train:
                 raise MissingClassError
         return x_train, x_test, y_train, y_test
-
-
-

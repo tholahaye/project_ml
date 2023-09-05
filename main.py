@@ -56,22 +56,34 @@ class AppWeb:
                 self.model_type = self.get_model_type()
 
             try:
+                # *******************************************************************************************
                 preprocessing = Preprocessing(self.dataframe,
                                               model_type= self.model_type,
                                               test_size=self.test_size,
                                               random_state=self.random_state)
                 self.X_train = preprocessing.X_train
-                self.X_test =  preprocessing.X_test
+                self.X_test = preprocessing.X_test
                 self.y_train = preprocessing.y_train
                 self.y_test = preprocessing.y_test
-                # TODO: A enlever du final
-                st.dataframe(self.dataframe)
+                self.classes_set = set()
 
-                self.classes_set = preprocessing.classes_set  # TODO: Utiliser dans la creation du modele
+                with st.expander("Original dataframe"):
+                    st.dataframe(self.dataframe)
 
                 self.dataframe = preprocessing.df
-                # TODO: A enlever du final
-                st.dataframe(self.dataframe)
+
+                if self.model_type == "Classification":
+                    self.classes_set = preprocessing.classes_set
+
+                with st.expander("Processed dataframe"):
+                    st.dataframe(self.dataframe)
+
+                with st.expander("Train/test"):
+                    st.text(self.classes_set)
+                    st.dataframe(preprocessing.X_train)
+                    st.dataframe(preprocessing.X_test)
+                    st.dataframe(preprocessing.y_train)
+                    st.dataframe(preprocessing.y_test)
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
@@ -80,14 +92,14 @@ class AppWeb:
                     self.hyperparameters_list = self.model_hyparameters.keys()
                     self.hyperparameters_values = dict()
 
-                    self.hyperparameters()
+                    self.hyperparameter_setting()
 
                     if len(self.hyperparameters_values) == len(self.hyperparameters_list):
                         st.sidebar.text(self.hyperparameters_values)
 
             except MissingClassError:
                 st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
-
+            #  *****************************************************************************************************
             self.ml = MachineLearning(model_type= self.model_type,
                             model_name=self.model,
                             hyper_params=self.hyperparameters_values,
@@ -127,7 +139,7 @@ class AppWeb:
         else:
             return "Classification"
 
-    def hyperparameters(self):
+    def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
                 if self.model_hyparameters[hp]['type'] == 'str':
@@ -139,7 +151,10 @@ class AppWeb:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
                                               help=f"{self.model_hyparameters[hp]['description']}")
-                        if hp_show:
+                        if not hp_show:
+                            hp_value = None
+
+                        else:
                             if self.model_hyparameters[hp]['max_value'] != float('inf'):
                                 hp_value = st.number_input(label=f"Value {hp}:",
                                                            min_value=self.model_hyparameters[hp]['min_value'],

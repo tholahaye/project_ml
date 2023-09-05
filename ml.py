@@ -25,7 +25,7 @@ class MachineLearning:
             self.tab_eval = self.create_tab_eval_clf()
             self.evaluate_clf()
         if self.model_type == "Regression":
-            self.tab_eval = self.create_tab_eval_reg()
+            self.tab_eval = create_tab_eval_reg()
             self.evaluate_reg()
 
     def learning(self, X, y, model):
@@ -38,7 +38,8 @@ class MachineLearning:
 
     def create_tab_eval_clf(self):
         tab_eval = pd.DataFrame(
-            columns=["model", "hyperparameters", "fold", "classe", "accuracy", "precision", "recall", "f1-score"])
+            columns=["model", "hyperparameters", "fold", "classe",
+                     "accuracy", "precision", "recall", "f1-score"])
         return tab_eval
 
     def evaluate_clf(self):
@@ -51,7 +52,7 @@ class MachineLearning:
                    "precision": report_dict[cl]['precision'],
                    "recall": report_dict[cl]['recall'],
                    "f1-score": report_dict[cl]['f1-score']}
-            tabEval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
+            self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
         row = {"model": self.model_name,
                 "hyperparameters": self.hyper_params,
                 # "fold": fold_number,
@@ -60,12 +61,7 @@ class MachineLearning:
                 "precision": report_dict['macro avg']['precision'],
                 "recall": report_dict['macro avg']['recall'],
                 "f1-score": report_dict['macro avg']['f1-score']}
-        tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
-        return tab_eval
-
-    def create_tab_eval_reg(self):
-        tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
-        return tab_eval
+        self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
 
     def evaluate_reg(self):
         row = {"model": self.model_name,
@@ -74,7 +70,8 @@ class MachineLearning:
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxe": max_error(self.y_test, self.y_pred)}
-        tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
-        return tab_eval
+        self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
 
-
+def create_tab_eval_reg():
+    tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
+    return tab_eval
