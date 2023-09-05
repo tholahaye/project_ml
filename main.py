@@ -39,7 +39,7 @@ class AppWeb:
                                                             value=42,
                                                             min_value=0,
                                                             step=1,
-                                                            help='Write an integer. It controls the '
+                                                            help='Choose or write an integer. It controls the '
                                                             'shuffling applied to the data before'
                                                             ' applying the split.'))
                 except ValueError:
@@ -49,18 +49,32 @@ class AppWeb:
                                                        value=0.2,
                                                        min_value=0.01,
                                                        max_value=0.99,
-                                                       help='Write a number between 0.0 and 1.0 and'
+                                                       help='Choose or write a number between 0.0 and 1.0 and'
                                                        ' represent the proportion of the dataset'
                                                        ' to include in the test split.'))
+
+                self.choice_na = st.selectbox("NaN treatment:",
+                                            ['Remove line', 'Replaced by mean', 'Replaced by median'],
+                                            help="Choose how the missing values will be treated.")
+
+                self.collinear_thresh = float(st.number_input("Collinearity threshold:",
+                                                              value=0.5,
+                                                              min_value=0.01,
+                                                              max_value=0.99,
+                                                              help='Choose or write a number between 0.0 and 1.0 and'
+                                                              'represent the threshold above which'
+                                                              'variables are considered collinear.'))
 
                 self.model_type = self.get_model_type()
 
             try:
                 # *******************************************************************************************
                 preprocessing = Preprocessing(self.dataframe,
-                                              model_type= self.model_type,
+                                              model_type=self.model_type,
                                               test_size=self.test_size,
-                                              random_state=self.random_state)
+                                              random_state=self.random_state,
+                                              choice_na=self.choice_na,
+                                              collinear_thresh=self.collinear_thresh)
                 self.X_train = preprocessing.X_train
                 self.X_test = preprocessing.X_test
                 self.y_train = preprocessing.y_train
@@ -94,9 +108,6 @@ class AppWeb:
 
                     self.hyperparameter_setting()
 
-                    if len(self.hyperparameters_values) == len(self.hyperparameters_list):
-                        st.sidebar.text(self.hyperparameters_values)
-
             except MissingClassError:
                 st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
             #  *****************************************************************************************************
@@ -108,7 +119,13 @@ class AppWeb:
                             y_train=self.y_train,
                             y_test=self.y_test,
                             classes=self.classes_set)
-            st.dataframe(self.ml.tab_eval)
+            with st.expander("Evaluation"):
+                st.dataframe(self.ml.tab_eval)
+                if self.model_type == 'Classification':
+                    pass
+                    # TODO: Affichage de la matrice en graph
+                    #st.plotly_chart(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+
 
         finally:
             self.conn.close()

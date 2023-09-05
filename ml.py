@@ -1,5 +1,6 @@
 import pandas as pd
-from sklearn.metrics import classification_report, mean_squared_error, mean_absolute_error, max_error
+from sklearn.metrics import classification_report, mean_squared_error,\
+                            mean_absolute_error, max_error, confusion_matrix
 
 from constantes import STRUCTURE
 
@@ -24,9 +25,11 @@ class MachineLearning:
         if self.model_type == "Classification":
             self.tab_eval = self.create_tab_eval_clf()
             self.evaluate_clf()
+            self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
         if self.model_type == "Regression":
             self.tab_eval = create_tab_eval_reg()
             self.evaluate_reg()
+
 
     def learning(self, X, y, model):
         model.fit(X, y)
