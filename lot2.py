@@ -30,7 +30,6 @@ class Preprocessing:
         self.X_df = self.df.drop(columns=['target'])
         self.y_df = self.df['target']
 
-
         self.scaler()
 
         try:
@@ -50,7 +49,7 @@ class Preprocessing:
 
     def encoder(self):
         le = LabelEncoder()
-        for column in self.df.columns:
+        for column in self.df.drop(columns=['target']).columns:
             if str(self.df.dtypes[column]) == 'object':
                 le.fit(self.df[column].unique())
                 self.df[column] = le.transform(self.df[column])
@@ -61,7 +60,6 @@ class Preprocessing:
         pass
 
     def scaler(self):
-        # pass  # TODO: A enlever dans le final
         scaler = StandardScaler()
         self.df = scaler.fit_transform(self.X_df, self.y_df)
 
