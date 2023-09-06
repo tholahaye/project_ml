@@ -163,7 +163,8 @@ class AppWeb:
                 st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil:")
 
         finally:
-            self.conn.close()
+            if self.conn:
+                self.conn.close()
 
     def get_table_names(self):
         self.cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
