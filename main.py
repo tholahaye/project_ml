@@ -123,7 +123,7 @@ class AppWeb:
                     self.hyperparameters_values = dict()
                     #TODO si pas de paramètres dans la structure, ne pas proposer la cross val
                     if self.cross_val:
-                        #TODO : recuperer nombre de folds
+                        #TODO : recuperer nombre de folds -------self.nfold =
                         self.hyperparameter_setting_crossval()
                     else:
                         self.hyperparameter_setting()
