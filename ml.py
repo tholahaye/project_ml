@@ -13,7 +13,7 @@ import streamlit as st
 
 class MachineLearning:
     def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
-                 cross_val, cv_nfold, cv_score="max_error"):
+                 cross_val, cv_nfold, cv_score):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
@@ -37,10 +37,8 @@ class MachineLearning:
             self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
             self.grid_search.fit(self.X_train, self.y_train)
             self.cv_comb_params = self.grid_search.cv_results_['params']
-            self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
-
             self.y_pred = grid_search.predict(self.X_test)
-
+            self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
             self.evaluate_crossval()
             if self.model_type == "Classification":
                 self.tab_eval = create_tab_eval_clf()
