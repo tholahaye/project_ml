@@ -114,13 +114,14 @@ class AppWeb:
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
-                self.cross_val = st.sidebar.toggle('Cross-validation',
+                self.cross_val = st.sidebar.toggle("Compare several parameters' configuration with Cross-validation",
                                                    help='Help cross-validation')  # TODO: Help cross_val
 
                 if self.model_type:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
                     self.hyperparameters_list = self.model_hyperparameters.keys()
                     self.hyperparameters_values = dict()
+                    #TODO si pas de paramètres dans la structure, ne pas proposer la cross val
                     if self.cross_val:
                         self.hyperparameter_setting_crossval()
                     else:
