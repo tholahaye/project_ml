@@ -107,6 +107,7 @@ class AppWeb:
                     self.cross_val = st.sidebar.toggle("Compare several parameters configurations"
                                                        " with Cross-validation",
                                                        help='Help cross-validation')  # TODO: Help cross_val
+                    print(self.cross_val)
                 else:
                     self.cross_val = False
 
@@ -161,7 +162,8 @@ class AppWeb:
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
-                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(CV_MAX_RES),:])
+                        #st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(CV_MAX_RES),:])
+                        print('table_eval')
 
                 with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
@@ -212,61 +214,79 @@ class AppWeb:
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
                 if self.model_hyperparameters[hp]['type'] == 'str':
-                    hp_value = st.multiselect(f"Hyperparameter {hp}:",
+                    hp_value_result = st.multiselect(f"Hyperparameter {hp}:",
                                               self.model_hyperparameters[hp]['values'],
                                               default=self.model_hyperparameters[hp]['values'][0],
                                               help=f"{self.model_hyperparameters[hp]['description']}")
+                    print(1)
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
                                               help=f"{self.model_hyperparameters[hp]['description']}")
+                        print(2)
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
                         hp_value = st.text_input(label=f"Hyperparameter {hp}:",
                                                  value=self.model_hyperparameters[hp]['default'],
                                                  help=f"{self.model_hyperparameters[hp]['description']}."
                                                       "Separate the wanted values by ';'.")
-
+                        print(3)
                         hp_value = hp_value.split(';')
+                        hp_value_result = []
+                        print(f"hp value: {hp_value}")
                         for value in hp_value:
                             value = str(value)
                             value = value.strip()
+                            print(value)
                             try:
                                 if value == '' and len(hp_value) != 0:
+                                    print('len 0')
                                     continue
 
                                 hp_type = self.model_hyperparameters[hp]['type']
+                                print('hp_type'+hp_type)
                                 try:
                                     if hp_type == 'int':
                                         value = int(value)
+                                        print('value int')
+
                                     elif hp_type == 'float':
                                         value = float(value)
+                                        print('value float')
                                 except ValueError:
                                     st.markdown(f":red[__Error: You must "
                                                 f"type a list of {hp_type} separated by ';'.__]")
+                                    print('value error')
                                     break
 
                                 try:
                                     min_hp = self.model_hyperparameters[hp]['min_value']
                                     if min_hp > value:
+                                        print('inferior to min')
                                         raise InferiorToMinError
                                 except KeyError:
+                                    print('Key error')
                                     pass
+
                                 except TypeError:
+                                    print('Type error')
                                     pass
 
                                 try:
                                     max_hp = self.model_hyperparameters[hp]['max_value']
                                     if max_hp < value:
+                                        print('superior to max')
                                         raise SuperiorToMaxError
 
                                 except KeyError:
+                                    print('Key error')
                                     pass
                                 except TypeError:
+                                    print('Type error')
                                     pass
-
-                                hp_value.append(value)
+                                hp_value_result.append(value)
+                                print('append value')
 
                             except InferiorToMinError:
                                 st.markdown(f":red[__Error: Your values must be superior or equal to {min_hp}.__]")
@@ -277,7 +297,9 @@ class AppWeb:
                 if len(hp_value) == 0:
                     st.markdown(":red[__Error: You must enter at least one value.__]")
                 else:
-                    self.hyperparameters_values[hp] = hp_value
+                    print(4)
+                    self.hyperparameters_values[hp] = hp_value_result
+            print(5)
 
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
