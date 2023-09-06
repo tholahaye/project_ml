@@ -13,7 +13,7 @@ import streamlit as st
 
 class MachineLearning:
     def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
-                 cross_val, cv_nfold, cv_score):
+                 cross_val, cv_nfold, cv_score="max_error"):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
