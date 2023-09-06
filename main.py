@@ -2,10 +2,12 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 import plotly.figure_factory as ff
-from lot2 import Preprocessing, MissingClassError
-from ml import MachineLearning
+from preprocessing import Preprocessing, MissingClassError
+import ml
 from constantes import STRUCTURE
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 class AppWeb:
 
@@ -19,10 +21,14 @@ class AppWeb:
         st.title("Bienvenue chez les dauphins de Chine !")
 
         try:
-            self.conn = psycopg2.connect(host="ec2-34-247-94-62.eu-west-1.compute.amazonaws.com",
-                                         database="d4on6t2qk9dj5a",
-                                         user="nxebpjsgxecqny",
-                                         password="1da2f1f48e4a37bf64e3344fe7670a6547c169472263b62d042a01a8d08d2114")
+            access = open('access.txt').readlines()
+            for n in range(len(access)):
+                access[n] = access[n].strip('\n')
+
+            self.conn = psycopg2.connect(host=access[0],
+                                         database=access[1],
+                                         user=access[2],
+                                         password=access[3])
 
             self.cursor = self.conn.cursor()
 
@@ -55,8 +61,8 @@ class AppWeb:
                                                        ' to include in the test split.'))
 
                 self.choice_na = st.selectbox("NaN treatment:",
-                                            ['Remove line', 'Replaced by mean', 'Replaced by median'],
-                                            help="Choose how the missing values will be treated.")
+                                              ['Remove line', 'Replaced by mean', 'Replaced by median'],
+                                              help="Choose how the missing values will be treated.")
 
                 self.collinear_thresh = float(st.number_input("Collinearity threshold:",
                                                               value=0.5,
@@ -97,6 +103,9 @@ class AppWeb:
                 with st.expander("Processed dataframe"):
                     st.dataframe(self.dataframe)
 
+                # with st.expander("stsqdfjlkdf"):
+                #     ml.confusion_matrix(self.y_test, self.y_pred)
+
                 with st.expander("Train/test"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
@@ -121,9 +130,8 @@ class AppWeb:
                 st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
 
             #  Machine learning *******************************************************************************
-            # TODO: Try/Except sur AttributeError?
             try:
-                self.ml = MachineLearning(model_type=self.model_type,
+                self.ml = ml.MachineLearning(model_type=self.model_type,
                                           model_name=self.model,
                                           hyper_params=self.hyperparameters_values,
                                           X_train=self.X_train,
@@ -134,15 +142,14 @@ class AppWeb:
                                           cross_val=self.cross_val)
                 with st.expander("Evaluation"):
                     st.dataframe(self.ml.tab_eval)
+                
                     if self.model_type == 'Classification':
-                        pass
-                        # TODO: Affichage de la matrice de confusion en graph
-                        #st.plotly_chart(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+                        self.ml.conf_matrix()
 
 
             except AttributeError:
                 # TODO: Compléter le rapport d'erreur
-                st.markdown(":red[__Oopsie!__]")
+                st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil: :poop:")
 
         finally:
             self.conn.close()
@@ -173,6 +180,7 @@ class AppWeb:
         else:
             return "Classification"
 
+
     def hyperparameter_setting_crossval(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
@@ -194,12 +202,10 @@ class AppWeb:
                                                  help=f"{self.model_hyperparameters[hp]['description']}."
                                                  "Separate the wanted values by ';'.")
 
-                        # TODO: Parse l'input
                         hp_value = hp_value.split(';')
                         for value in hp_value:
                             value = value.strip()
                             if value == '' and len(hp_value) != 0:
-                                hp_value.remove('')
                                 continue
 
                             hp_type = self.model_hyperparameters[hp]['type']
@@ -218,6 +224,8 @@ class AppWeb:
                                     raise InferiorToMinError
                             except KeyError:
                                 pass
+                            except TypeError:
+                                pass
                             except InferiorToMinError:
                                 st.markdown(f":red[__Error: Your values must be superior or equal to {min_hp}.__]")
 
@@ -227,12 +235,15 @@ class AppWeb:
                                     raise SuperiorToMaxError
                             except KeyError:
                                 pass
+                            except TypeError:
+                                pass
                             except SuperiorToMaxError:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
                         if len(hp_value) == 0:
-                            st.markdown(f":red[__Error: You must enter at least one value.__]")
+                            st.markdown(":red[__Error: You must enter at least one value.__]")
+                        hp_value = list(filter(None, hp_value))
+                self.hyperparameters_values[hp] = hp_value
 
-                    self.hyperparameters_values[hp] = hp_value
 
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
@@ -272,7 +283,6 @@ class AppWeb:
                                                        help=f"{self.model_hyperparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
-
 
 class InferiorToMinError(Exception):
     pass

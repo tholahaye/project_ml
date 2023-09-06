@@ -3,6 +3,10 @@ from sklearn.metrics import classification_report, mean_squared_error,\
                             mean_absolute_error, max_error, confusion_matrix
 
 from constantes import STRUCTURE
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+import streamlit as st
 
 
 
@@ -29,7 +33,6 @@ class MachineLearning:
             self.model.set_params(**self.hyper_params)
             self.model = self.learning(X=self.X_train, y=self.y_train, model=self.model)
             self.y_pred = self.predict(X=self.X_test, model=self.model)
-
             if self.model_type == "Classification":
                 self.tab_eval = create_tab_eval_clf()
                 self.evaluate_clf()
@@ -53,7 +56,6 @@ class MachineLearning:
         for cl in self.classes:
             row = {"model": self.model_name,
                    "hyperparameters": self.hyper_params,
-                   # "fold": fold_number,
                    "classe": cl,
                    "precision": report_dict[cl]['precision'],
                    "recall": report_dict[cl]['recall'],
@@ -61,7 +63,6 @@ class MachineLearning:
             self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
         row = {"model": self.model_name,
                 "hyperparameters": self.hyper_params,
-                # "fold": fold_number,
                 "classe": "__all (macro avg)",
                 "accuracy": report_dict["accuracy"],
                 "precision": report_dict['macro avg']['precision'],
@@ -72,11 +73,21 @@ class MachineLearning:
     def evaluate_reg(self):
         row = {"model": self.model_name,
                "hyperparameters": self.hyper_params,
-               # "fold": fold_number,
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxe": max_error(self.y_test, self.y_pred)}
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
+    
+    def conf_matrix(self):
+
+        # Créez un graphique de la matrice de confusion
+        fig = plt.figure(figsize=(6, 6))
+        sns.heatmap(self.cf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False, square=True)
+        plt.xlabel('Valeurs Prédites')
+        plt.ylabel('Valeurs Réelles')
+        plt.title('Matrice de Confusion')
+        plt.show()
+        return st.pyplot(fig)
 
 def create_tab_eval_reg():
     tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
