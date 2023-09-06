@@ -101,6 +101,7 @@ class Preprocessing:
             classes_train = set(y_train.unique())
             if classes != classes_train:
                 raise MissingClassError
+                #TODO check the distributions, not only the equality of sets
         return x_train, x_test, y_train, y_test
 
     # TODO: Graph correlation matrix
