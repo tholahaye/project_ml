@@ -12,7 +12,7 @@ class AppWeb:
     def __init__(self):
         st.set_page_config(
             page_title="ML Playground",
-            layout="centered",
+            layout="wide",
             initial_sidebar_state="auto"
         )
 
@@ -265,6 +265,7 @@ class AppWeb:
                                             self.model_hyperparameters[hp]['values'],
                                             help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
+
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
@@ -272,29 +273,46 @@ class AppWeb:
                         if not hp_show:
                             hp_value = None
 
-                        else:
-                            if self.model_hyperparameters[hp]['max_value'] != float('inf'):
-                                hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyperparameters[hp]['min_value'],
-                                                           max_value=self.model_hyperparameters[hp]['max_value'],)
-                            else:
-                                hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyperparameters[hp]['min_value'])
-
-                    else:
-                        if self.model_hyperparameters[hp]['max_value'] != float('inf'):
-                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyperparameters[hp]['default'],
-                                                       min_value=self.model_hyperparameters[hp]['min_value'],
-                                                       max_value=self.model_hyperparameters[hp]['max_value'],
-                                                       help=f"{self.model_hyperparameters[hp]['description']}")
-                        else:
-                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyperparameters[hp]['default'],
-                                                       min_value=self.model_hyperparameters[hp]['min_value'],
-                                                       help=f"{self.model_hyperparameters[hp]['description']}")
+                    if not self.model_hyperparameters[hp]['optional'] or hp_show:
+                        hp_value = self.hyperparameter_number_input(hp)
 
                 self.hyperparameters_values[hp] = hp_value
+
+    def hyperparameter_number_input(self, hp):
+        hp_type = self.model_hyperparameters[hp]['type']
+        min_value = self.model_hyperparameters[hp]['min_value']
+        max_value = self.model_hyperparameters[hp]['max_value']
+        value = self.model_hyperparameters[hp]['default']
+        if max_value == float('inf'):
+            max_value = None
+
+        if hp_type == 'int':
+            try:
+                value = int(value)
+            except ValueError:
+                value = None
+            step = int(1)
+
+        if hp_type == 'float':
+            min_value = float(min_value)
+            if max_value:
+                max_value = float(max_value)
+            try:
+                value = float(value)
+            except ValueError:
+                value = None
+            step = 0.01
+
+        hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                   value=value,
+                                   step=step,
+                                   min_value=min_value,
+                                   max_value=max_value,
+                                   help=f"{self.model_hyperparameters[hp]['description']}")
+
+        return hp_value
+
+
 
 
 class InferiorToMinError(Exception):
