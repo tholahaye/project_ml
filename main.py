@@ -20,10 +20,10 @@ class AppWeb:
 
         try:
 
-            self.conn = psycopg2.connect(host=config("HOST"),
-                                         database=config("DATABASE"),
-                                         user=config("USER"),
-                                         password=config("PASSWORD"))
+            self.conn = psycopg2.connect(host=config('HOST'),
+                                         database=config('DATABASE'),
+                                         user=config('USER'),
+                                         password=config('PASSWORD'))
 
             self.cursor = self.conn.cursor()
 
