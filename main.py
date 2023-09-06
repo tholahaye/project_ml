@@ -1,13 +1,10 @@
 import psycopg2
 import pandas as pd
 import streamlit as st
-import plotly.figure_factory as ff
 from preprocessing import Preprocessing, MissingClassError
 import ml
 from constantes import STRUCTURE
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
+from decouple import config
 
 
 class AppWeb:
@@ -15,21 +12,18 @@ class AppWeb:
     def __init__(self):
         st.set_page_config(
             page_title="ML Playground",
-            layout="centered",
+            layout="wide",
             initial_sidebar_state="auto"
         )
 
         st.title("Bienvenue chez les dauphins de Chine !")
 
         try:
-            access = open('access.txt').readlines()
-            for n in range(len(access)):
-                access[n] = access[n].strip('\n')
 
-            self.conn = psycopg2.connect(host=access[0],
-                                         database=access[1],
-                                         user=access[2],
-                                         password=access[3])
+            self.conn = psycopg2.connect(host=config('HOST'),
+                                         database=config('DATABASE'),
+                                         user=config('USER'),
+                                         password=config('PASSWORD'))
 
             self.cursor = self.conn.cursor()
 
@@ -41,7 +35,7 @@ class AppWeb:
 
             self.dataframe = self.df_creation()
 
-            with st.sidebar.expander(':blue[__Parameters__]'):
+            with st.sidebar.expander(':blue[__Preprocessing parameters__]'):
                 try:
                     self.random_state = int(st.number_input("Random state:",
                                                             value=42,
@@ -91,47 +85,58 @@ class AppWeb:
                 self.y_test = preprocessing.y_test
                 self.classes_set = set()
 
-                with st.expander("Original dataframe"):
+                with st.expander(":green[__Original dataframe__]"):
                     st.dataframe(self.dataframe)
-                    # TODO: Afficher le graph de la matrice de corrélation
-                    # st.plotly(preprocessing.cr_matrix)
+                    st.pyplot(preprocessing.cr_matrix)
 
                 self.dataframe = preprocessing.df
 
                 if self.model_type == "Classification":
                     self.classes_set = preprocessing.classes_set
 
-                with st.expander("Processed dataframe"):
+                with st.expander(":green[__Processed dataframe__]"):
                     st.dataframe(self.dataframe)
 
-                # with st.expander("stsqdfjlkdf"):
-                #     ml.confusion_matrix(self.y_test, self.y_pred)
-
-                with st.expander("Train/test"):
+                with st.expander(":green[__Train/test__]"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
                     st.dataframe(preprocessing.y_train)
                     st.dataframe(preprocessing.y_test)
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
+                if len(STRUCTURE[self.model_type][self.model]['hyperparameters']) != 0:
+                    self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
+                                                       help='Help cross-validation')  # TODO: Help cross_val
+                else:
+                    self.cross_val = False
 
-                self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
-                                                   help='Help cross-validation')  # TODO: Help cross_val
+                if self.cross_val:
+                    with st.sidebar.expander(':blue[__Cross-validation parameters__]'):
+                        try:
+                            self.nfold = int(st.number_input("Fold number:",
+                                                                    value=5,
+                                                                    min_value=2,
+                                                                    step=1,
+                                                                    # TODO: A completer
+                                                                    help='Choose or write an integer. It controls the '
+                                                                         'number of folds'
+                                                                         ' applied to the model.'))
+                        except ValueError:
+                            st.markdown(':red[__Error: The number of fold must be an integer__]')
+
 
                 if self.model_type:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
                     self.hyperparameters_list = self.model_hyperparameters.keys()
                     self.hyperparameters_values = dict()
-                    # TODO si pas de paramètres dans la structure, ne pas proposer la cross val
                     if self.cross_val:
-                        # TODO : recuperer nombre de folds -------self.nfold =
                         self.hyperparameter_setting_crossval()
-                        # TODO: transform each hyperparameter in a list, even if null or with anly one value
                     else:
                         self.hyperparameter_setting()
 
             except MissingClassError:
-                st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
+                st.markdown(":red[__Training data do not have all classes"
+                            " represented, please change your random seed.__]")
 
             #  Machine learning *******************************************************************************
             try:
@@ -151,21 +156,22 @@ class AppWeb:
                     with st.expander("Parameters' selection with cross validation"):
                         st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(10),:])
 
-
-
-                with st.expander("Evaluation"):
+                with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
-
+                
                     if self.model_type == 'Classification':
+                        pass
+                        st.markdown(":green[__Confusion Matrix__]")
                         self.ml.conf_matrix()
 
 
             except AttributeError:
                 # TODO: Compléter le rapport d'erreur
-                st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil: :poop:")
+                st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil:")
 
         finally:
-            self.conn.close()
+            if self.conn:
+                self.conn.close()
 
     def get_table_names(self):
         self.cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
@@ -205,8 +211,6 @@ class AppWeb:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
                                               help=f"{self.model_hyperparameters[hp]['description']}")
-                        if not hp_show:
-                            hp_value = None
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
                         hp_value = st.text_input(label=f"Hyperparameter {hp}:",
@@ -253,7 +257,10 @@ class AppWeb:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
                         if len(hp_value) == 0:
                             st.markdown(":red[__Error: You must enter at least one value.__]")
+
+                        hp_value.append(value)
                         hp_value = list(filter(None, hp_value))
+
                 self.hyperparameters_values[hp] = hp_value
 
     def hyperparameter_setting(self):
@@ -264,6 +271,7 @@ class AppWeb:
                                             self.model_hyperparameters[hp]['values'],
                                             help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
+
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
@@ -271,29 +279,46 @@ class AppWeb:
                         if not hp_show:
                             hp_value = None
 
-                        else:
-                            if self.model_hyperparameters[hp]['max_value'] != float('inf'):
-                                hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyperparameters[hp]['min_value'],
-                                                           max_value=self.model_hyperparameters[hp]['max_value'], )
-                            else:
-                                hp_value = st.number_input(label=f"Value {hp}:",
-                                                           min_value=self.model_hyperparameters[hp]['min_value'])
-
-                    else:
-                        if self.model_hyperparameters[hp]['max_value'] != float('inf'):
-                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyperparameters[hp]['default'],
-                                                       min_value=self.model_hyperparameters[hp]['min_value'],
-                                                       max_value=self.model_hyperparameters[hp]['max_value'],
-                                                       help=f"{self.model_hyperparameters[hp]['description']}")
-                        else:
-                            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                                       value=self.model_hyperparameters[hp]['default'],
-                                                       min_value=self.model_hyperparameters[hp]['min_value'],
-                                                       help=f"{self.model_hyperparameters[hp]['description']}")
+                    if not self.model_hyperparameters[hp]['optional'] or hp_show:
+                        hp_value = self.hyperparameter_number_input(hp)
 
                 self.hyperparameters_values[hp] = hp_value
+
+    def hyperparameter_number_input(self, hp):
+        hp_type = self.model_hyperparameters[hp]['type']
+        min_value = self.model_hyperparameters[hp]['min_value']
+        max_value = self.model_hyperparameters[hp]['max_value']
+        value = self.model_hyperparameters[hp]['default']
+        if max_value == float('inf'):
+            max_value = None
+
+        if hp_type == 'int':
+            try:
+                value = int(value)
+            except ValueError:
+                value = None
+            step = int(1)
+
+        if hp_type == 'float':
+            min_value = float(min_value)
+            if max_value:
+                max_value = float(max_value)
+            try:
+                value = float(value)
+            except ValueError:
+                value = None
+            step = 0.01
+
+        hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                   value=value,
+                                   step=step,
+                                   min_value=min_value,
+                                   max_value=max_value,
+                                   help=f"{self.model_hyperparameters[hp]['description']}")
+
+        return hp_value
+
+
 
 
 class InferiorToMinError(Exception):
