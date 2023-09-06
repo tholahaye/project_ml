@@ -114,7 +114,7 @@ class AppWeb:
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
 
-                self.cross_val = st.sidebar.toggle("Compare several parameters' configuration with Cross-validation",
+                self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
                                                    help='Help cross-validation')  # TODO: Help cross_val
 
                 if self.model_type:
@@ -125,6 +125,7 @@ class AppWeb:
                     if self.cross_val:
                         #TODO : recuperer nombre de folds -------self.nfold =
                         self.hyperparameter_setting_crossval()
+                        #TODO: transform each hyperparameter in a list, even if null or with anly one value
                     else:
                         self.hyperparameter_setting()
 
