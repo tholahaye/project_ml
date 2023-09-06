@@ -8,7 +8,6 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 import streamlit as st
 
-#recupérer les classes, le model_type, model_name, self.hyper_params, X/y test & train
 
 
 class MachineLearning:
@@ -34,11 +33,8 @@ class MachineLearning:
             self.model.set_params(**self.hyper_params)
             self.model = self.learning(X=self.X_train, y=self.y_train, model=self.model)
             self.y_pred = self.predict(X=self.X_test, model=self.model)
-
             if self.model_type == "Classification":
-                self.tab_eval = self.create_tab_eval_clf()
-                print(self.y_pred)
-                print(self.y_test)
+                self.tab_eval = create_tab_eval_clf()
                 self.evaluate_clf()
                 self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
             if self.model_type == "Regression":
@@ -54,18 +50,12 @@ class MachineLearning:
         y_pred = model.predict(X)
         return y_pred
 
-    def create_tab_eval_clf(self):
-        tab_eval = pd.DataFrame(
-            columns=["model", "hyperparameters", "fold", "classe",
-                     "accuracy", "precision", "recall", "f1-score"])
-        return tab_eval
 
     def evaluate_clf(self):
         report_dict = classification_report(self.y_test, self.y_pred, output_dict=True)
         for cl in self.classes:
             row = {"model": self.model_name,
                    "hyperparameters": self.hyper_params,
-                   # "fold": fold_number,
                    "classe": cl,
                    "precision": report_dict[cl]['precision'],
                    "recall": report_dict[cl]['recall'],
@@ -73,7 +63,6 @@ class MachineLearning:
             self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
         row = {"model": self.model_name,
                 "hyperparameters": self.hyper_params,
-                # "fold": fold_number,
                 "classe": "__all (macro avg)",
                 "accuracy": report_dict["accuracy"],
                 "precision": report_dict['macro avg']['precision'],
@@ -84,7 +73,6 @@ class MachineLearning:
     def evaluate_reg(self):
         row = {"model": self.model_name,
                "hyperparameters": self.hyper_params,
-               # "fold": fold_number,
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxe": max_error(self.y_test, self.y_pred)}
@@ -103,4 +91,10 @@ class MachineLearning:
 
 def create_tab_eval_reg():
     tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
+    return tab_eval
+
+def create_tab_eval_clf():
+    tab_eval = pd.DataFrame(
+        columns=["model", "hyperparameters", "fold", "classe",
+                 "accuracy", "precision", "recall", "f1-score"])
     return tab_eval

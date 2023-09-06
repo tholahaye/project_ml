@@ -46,7 +46,7 @@ class Preprocessing:
                                                              test_size=self.test_size,
                                                              random_state=self.random_state)
         except MissingClassError:
-            raise MissingClassError
+            raise MissingClassError #TODO error message : "Training data do not have all classes represented, please change your random seed"
 
     def remove_nan(self):
         if self.choice_na.lower() == 'median':
@@ -98,9 +98,11 @@ class Preprocessing:
                                                             random_state=self.random_state)
         if self.model_type == "Classification":
             classes = set(self.y_df.unique())
+            #TODO: check for unbalanced dataset
             classes_train = set(y_train.unique())
             if classes != classes_train:
                 raise MissingClassError
+                #TODO check the distributions, not only the equality of sets
         return x_train, x_test, y_train, y_test
 
     # TODO: Graph correlation matrix
