@@ -74,6 +74,11 @@ class Preprocessing:
                 le.fit(self.df[column].unique())
                 self.df[column] = le.transform(self.df[column])
 
+    def drop_colinear(self):
+        #TODO: Enlever les colinear
+        pass
+
+
     def remove_outliers(self):
         pass
         # TODO: Elimination des outliers

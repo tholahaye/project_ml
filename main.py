@@ -72,7 +72,6 @@ class AppWeb:
             try:
 
                 # Preprocessing **************************************************************************************
-                # TODO: Try/Except sur AttributeError?
                 preprocessing = Preprocessing(self.dataframe,
                                               model_type=self.model_type,
                                               test_size=self.test_size,
@@ -105,7 +104,8 @@ class AppWeb:
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
                 if len(STRUCTURE[self.model_type][self.model]['hyperparameters']) != 0:
-                    self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
+                    self.cross_val = st.sidebar.toggle("Compare several parameters configurations"
+                                                       " with Cross-validation",
                                                        help='Help cross-validation')  # TODO: Help cross_val
                 else:
                     self.cross_val = False
