@@ -3,7 +3,7 @@ from sklearn.metrics import classification_report, mean_squared_error,\
                             mean_absolute_error, max_error, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
-from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
+from constantes import STRUCTURE, CV_SCORES
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st

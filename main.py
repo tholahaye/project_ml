@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 import ml
-from constantes import STRUCTURE
+from constantes import STRUCTURE, CV_MAX_RES
 from decouple import config
 
 
@@ -154,7 +154,7 @@ class AppWeb:
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
-                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(10),:])
+                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(CV_MAX_RES),:])
 
                 with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
