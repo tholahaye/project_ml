@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
+
 class AppWeb:
 
     def __init__(self):
@@ -47,8 +48,8 @@ class AppWeb:
                                                             min_value=0,
                                                             step=1,
                                                             help='Choose or write an integer. It controls the '
-                                                            'shuffling applied to the data before'
-                                                            ' applying the split.'))
+                                                                 'shuffling applied to the data before'
+                                                                 ' applying the split.'))
                 except ValueError:
                     st.markdown(':red[__Error: The selected random state must be an integer__]')
 
@@ -57,8 +58,8 @@ class AppWeb:
                                                        min_value=0.01,
                                                        max_value=0.99,
                                                        help='Choose or write a number between 0.0 and 1.0 and'
-                                                       ' represent the proportion of the dataset'
-                                                       ' to include in the test split.'))
+                                                            ' represent the proportion of the dataset'
+                                                            ' to include in the test split.'))
 
                 self.choice_na = st.selectbox("NaN treatment:",
                                               ['Remove line', 'Replaced by mean', 'Replaced by median'],
@@ -69,8 +70,8 @@ class AppWeb:
                                                               min_value=0.01,
                                                               max_value=0.99,
                                                               help='Choose or write a number between 0.0 and 1.0 and'
-                                                              'represent the threshold above which'
-                                                              'variables are considered collinear.'))
+                                                                   'represent the threshold above which'
+                                                                   'variables are considered collinear.'))
 
                 self.model_type = self.get_model_type()
 
@@ -93,7 +94,7 @@ class AppWeb:
                 with st.expander("Original dataframe"):
                     st.dataframe(self.dataframe)
                     # TODO: Afficher le graph de la matrice de corrélation
-                    #st.plotly(preprocessing.cr_matrix)
+                    # st.plotly(preprocessing.cr_matrix)
 
                 self.dataframe = preprocessing.df
 
@@ -121,11 +122,11 @@ class AppWeb:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
                     self.hyperparameters_list = self.model_hyperparameters.keys()
                     self.hyperparameters_values = dict()
-                    #TODO si pas de paramètres dans la structure, ne pas proposer la cross val
+                    # TODO si pas de paramètres dans la structure, ne pas proposer la cross val
                     if self.cross_val:
-                        #TODO : recuperer nombre de folds -------self.nfold =
+                        # TODO : recuperer nombre de folds -------self.nfold =
                         self.hyperparameter_setting_crossval()
-                        #TODO: transform each hyperparameter in a list, even if null or with anly one value
+                        # TODO: transform each hyperparameter in a list, even if null or with anly one value
                     else:
                         self.hyperparameter_setting()
 
@@ -135,17 +136,26 @@ class AppWeb:
             #  Machine learning *******************************************************************************
             try:
                 self.ml = ml.MachineLearning(model_type=self.model_type,
-                                          model_name=self.model,
-                                          hyper_params=self.hyperparameters_values,
-                                          X_train=self.X_train,
-                                          X_test=self.X_test,
-                                          y_train=self.y_train,
-                                          y_test=self.y_test,
-                                          classes=self.classes_set,
-                                          cross_val=self.cross_val)
+                                             model_name=self.model,
+                                             hyper_params=self.hyperparameters_values,
+                                             X_train=self.X_train,
+                                             X_test=self.X_test,
+                                             y_train=self.y_train,
+                                             y_test=self.y_test,
+                                             classes=self.classes_set,
+                                             cross_val=self.cross_val,
+                                             cv_nfold=self.nfold,
+                                             cv_score="accuracy")
+
+                if self.cross_val:
+                    with st.expander("Parameters' selection with cross validation"):
+                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(10),:])
+
+
+
                 with st.expander("Evaluation"):
                     st.dataframe(self.ml.tab_eval)
-                
+
                     if self.model_type == 'Classification':
                         self.ml.conf_matrix()
 
@@ -183,14 +193,13 @@ class AppWeb:
         else:
             return "Classification"
 
-
     def hyperparameter_setting_crossval(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value = st.multiselect(f"Hyperparameter {hp}:",
-                                            self.model_hyperparameters[hp]['values'],
-                                            help=f"{self.model_hyperparameters[hp]['description']}")
+                                              self.model_hyperparameters[hp]['values'],
+                                              help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
@@ -203,7 +212,7 @@ class AppWeb:
                         hp_value = st.text_input(label=f"Hyperparameter {hp}:",
                                                  value=self.model_hyperparameters[hp]['default'],
                                                  help=f"{self.model_hyperparameters[hp]['description']}."
-                                                 "Separate the wanted values by ';'.")
+                                                      "Separate the wanted values by ';'.")
 
                         hp_value = hp_value.split(';')
                         for value in hp_value:
@@ -247,7 +256,6 @@ class AppWeb:
                         hp_value = list(filter(None, hp_value))
                 self.hyperparameters_values[hp] = hp_value
 
-
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
@@ -267,7 +275,7 @@ class AppWeb:
                             if self.model_hyperparameters[hp]['max_value'] != float('inf'):
                                 hp_value = st.number_input(label=f"Value {hp}:",
                                                            min_value=self.model_hyperparameters[hp]['min_value'],
-                                                           max_value=self.model_hyperparameters[hp]['max_value'],)
+                                                           max_value=self.model_hyperparameters[hp]['max_value'], )
                             else:
                                 hp_value = st.number_input(label=f"Value {hp}:",
                                                            min_value=self.model_hyperparameters[hp]['min_value'])
@@ -286,6 +294,7 @@ class AppWeb:
                                                        help=f"{self.model_hyperparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
+
 
 class InferiorToMinError(Exception):
     pass

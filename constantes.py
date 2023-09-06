@@ -8,6 +8,13 @@ from sklearn.linear_model import LinearRegression, Ridge
 #import streamlit as st
 TARGET = 'target'
 
+CV_SCORES = {
+    'Classification': ["accuracy", "f1_macro", "precision_macro", "recall_macro"],
+    'Regression': ['neg_root_mean_squared_error', 'neg_mean_absolute_error', 'max_error']
+}
+
+CV_MAX_RES = 10
+
 STRUCTURE = {
     'Classification': {
         'Decision_Tree': {

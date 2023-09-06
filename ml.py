@@ -1,17 +1,19 @@
 import pandas as pd
 from sklearn.metrics import classification_report, mean_squared_error,\
                             mean_absolute_error, max_error, confusion_matrix
+from sklearn.model_selection import GridSearchCV
 
-from constantes import STRUCTURE
+from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import confusion_matrix
 import streamlit as st
 
 
 
+
 class MachineLearning:
-    def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes, cross_val):
+    def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
+                 cross_val, cv_nfold, cv_score):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
@@ -23,16 +25,36 @@ class MachineLearning:
 
         self.classes = classes
         self.cross_val = cross_val
+        self.cv_nfold = cv_nfold
+        self.cv_score = cv_score
+
+
+        self.model = STRUCTURE[self.model_type][self.model_name]["model"]
 
         # TODO: *********************CROSS-VAL ICI********************************************
         if self.cross_val:
-            pass
+            #TODO : erreur si une valeur unique par hyperparametre
+            self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
+            self.grid_search.fit(self.X_train, self.y_train)
+            self.cv_comb_params = self.grid_search.cv_results_['params']
+            self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
+
+            self.y_pred = grid_search.predict(self.X_test)
+
+            self.evaluate_crossval()
+            if self.model_type == "Classification":
+                self.tab_eval = create_tab_eval_clf()
+                self.evaluate_clf()
+                self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
+            if self.model_type == "Regression":
+                self.tab_eval = create_tab_eval_reg()
+                self.evaluate_reg()
+
         # TODO: ******************************************************************************
         else:
-            self.model = STRUCTURE[self.model_type][self.model_name]["model"]
             self.model.set_params(**self.hyper_params)
-            self.model = self.learning(X=self.X_train, y=self.y_train, model=self.model)
-            self.y_pred = self.predict(X=self.X_test, model=self.model)
+            self.model.fit(self.X_train, self.y_train)
+            self.y_pred = self.model.predict(self.X_test)
             if self.model_type == "Classification":
                 self.tab_eval = create_tab_eval_clf()
                 self.evaluate_clf()
@@ -42,32 +64,23 @@ class MachineLearning:
                 self.evaluate_reg()
 
 
-    def learning(self, X, y, model):
-        model.fit(X, y)
-        return model
-
-    def predict(self, X, model):
-        y_pred = model.predict(X)
-        return y_pred
 
 
     def evaluate_clf(self):
         report_dict = classification_report(self.y_test, self.y_pred, output_dict=True)
         for cl in self.classes:
-            row = {"model": self.model_name,
-                   "hyperparameters": self.hyper_params,
+            row = {"hyperparameters": self.hyper_params,
                    "classe": cl,
                    "precision": report_dict[cl]['precision'],
                    "recall": report_dict[cl]['recall'],
                    "f1-score": report_dict[cl]['f1-score']}
             self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
-        row = {"model": self.model_name,
-                "hyperparameters": self.hyper_params,
-                "classe": "__all (macro avg)",
-                "accuracy": report_dict["accuracy"],
-                "precision": report_dict['macro avg']['precision'],
-                "recall": report_dict['macro avg']['recall'],
-                "f1-score": report_dict['macro avg']['f1-score']}
+        row = {"hyperparameters": self.hyper_params,
+               "classe": "__all (macro avg)",
+               "accuracy": report_dict["accuracy"],
+               "precision": report_dict['macro avg']['precision'],
+               "recall": report_dict['macro avg']['recall'],
+               "f1-score": report_dict['macro avg']['f1-score']}
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
 
     def evaluate_reg(self):
@@ -75,8 +88,22 @@ class MachineLearning:
                "hyperparameters": self.hyper_params,
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
-               "maxe": max_error(self.y_test, self.y_pred)}
+               "maxerror": max_error(self.y_test, self.y_pred)}
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
+
+    def evaluate_crossval(self):
+        for i in range(len(self.cv_comb_params)):
+            row = {"hyperparameters": self.cv_comb_params[i]}
+            for score in CV_SCORES[self.model_type]:
+                row[score] = self.grid_search.cv_results_["mean_test_" + score]
+            self.cv_tab_eval = pd.concat([self.cv_tab_eval, pd.DataFrame([row])], ignore_index=True)
+
+    def print_evaluate_crossval(self):
+        for i in range(len(self.cv_comb_params)):
+            row = {"hyperparameters": self.cv_comb_params[i]}
+            for score in CV_SCORES[self.model_type]:
+                row[score] = self.grid_search.cv_results_["mean_test_" + score]
+            self.cv_tab_eval = pd.concat([self.cv_tab_eval, pd.DataFrame([row])], ignore_index=True)
     
     def conf_matrix(self):
 
@@ -90,11 +117,16 @@ class MachineLearning:
         return st.pyplot(fig)
 
 def create_tab_eval_reg():
-    tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
+    tab_eval = pd.DataFrame(columns=["hyperparameters", "rmse", "mae", "maxerror"])
     return tab_eval
 
 def create_tab_eval_clf():
     tab_eval = pd.DataFrame(
-        columns=["model", "hyperparameters", "fold", "classe",
+        columns=["hyperparameters", "classe",
                  "accuracy", "precision", "recall", "f1-score"])
+    return tab_eval
+
+def create_tab_eval_crossval(scorings):
+    tab_eval = pd.DataFrame(
+        columns=["hyperparameters"] + scorings)
     return tab_eval
