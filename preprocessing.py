@@ -1,6 +1,7 @@
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import IsolationForest
-import plotly.figure_factory as ff
+import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 from scipy import stats
 import pandas as pd
@@ -37,8 +38,7 @@ class Preprocessing:
 
         self.scaler()
 
-        # TODO: Attribuer correlation matrix
-        #self.cr_matrix = self.correlation_matrix()
+        self.cr_matrix = self.corr_matrix()
 
         try:
             self.X_train, self.X_test, \
@@ -46,7 +46,7 @@ class Preprocessing:
                                                              test_size=self.test_size,
                                                              random_state=self.random_state)
         except MissingClassError:
-            raise MissingClassError #TODO error message : "Training data do not have all classes represented, please change your random seed"
+            raise MissingClassError
 
     def remove_nan(self):
         if self.choice_na.lower() == 'median':
@@ -74,10 +74,9 @@ class Preprocessing:
                 le.fit(self.df[column].unique())
                 self.df[column] = le.transform(self.df[column])
 
-        # TODO: Elimination des outliers
-
     def remove_outliers(self):
         pass
+        # TODO: Elimination des outliers
         #z_sc = np.abs(stats.zscore(self.df))
         #self.df = self.df[(z_sc < 3).all(axis=1)]
 
@@ -92,6 +91,15 @@ class Preprocessing:
         self.df = self.df[outlier_labels == 1]
         return self.df
 
+    def corr_matrix(self):
+        corr = self.X_df.corr()
+        mask = np.triu(np.ones_like(corr, dtype=bool))
+        fig = plt.figure(figsize=(12, 10))
+        cmap = 'coolwarm'
+        sns.heatmap(corr, annot=True, cmap=cmap, mask=mask)
+        plt.show()
+        return fig
+
     def split_train_test(self):
         x_train, x_test, y_train, y_test = train_test_split(self.X_df, self.y_df,
                                                             test_size=self.test_size,
@@ -104,24 +112,3 @@ class Preprocessing:
                 raise MissingClassError
                 #TODO check the distributions, not only the equality of sets
         return x_train, x_test, y_train, y_test
-
-    # TODO: Graph correlation matrix
-    '''def correlation_matrix(self):
-        corr_matrix = pd.DataFrame(self.df).corr()
-        fig = ff.create_annotated_heatmap(
-            z=corr_matrix.values,
-            x=list(corr_matrix.columns),
-            y=list(corr_matrix.index),
-            colorscale='RdBu',
-            annotation_text=corr_matrix.round(2).values,
-            showscale=True,
-            reversescale=True)
-
-        fig.update_layout(
-            title='Carte des corrélations',
-            title_font_size=15,
-            title_font=dict(weight='bold'),
-            xaxis=dict(ticks='', side='top'),
-            yaxis=dict(ticks='', side='left'))
-
-        return fig'''

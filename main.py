@@ -2,9 +2,6 @@ import psycopg2
 import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
-from ml import MachineLearning
-import plotly.figure_factory as ff
-from preprocessing import Preprocessing, MissingClassError
 import ml
 from constantes import STRUCTURE
 import matplotlib.pyplot as plt
@@ -92,37 +89,35 @@ class AppWeb:
                 self.y_test = preprocessing.y_test
                 self.classes_set = set()
 
-                with st.expander("Original dataframe"):
+                with st.expander(":green[__Original dataframe__]"):
                     st.dataframe(self.dataframe)
-                    # TODO: Afficher le graph de la matrice de corrélation
-                    #st.pyplot(preprocessing.cr_matrix)
+                    st.pyplot(preprocessing.cr_matrix)
 
                 self.dataframe = preprocessing.df
 
                 if self.model_type == "Classification":
                     self.classes_set = preprocessing.classes_set
 
-                with st.expander("Processed dataframe"):
+                with st.expander(":green[__Processed dataframe__]"):
                     st.dataframe(self.dataframe)
 
-                # TODO: A enlever du final
-                # with st.expander("stsqdfjlkdf"):
-                #     ml.confusion_matrix(self.y_test, self.y_pred)
-
-                with st.expander("Train/test"):
+                with st.expander(":green[__Train/test__]"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
                     st.dataframe(preprocessing.y_train)
                     st.dataframe(preprocessing.y_test)
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
+                if len(STRUCTURE[self.model_type][self.model]['hyperparameters']) != 0:
+                    self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
+                                                       help='Help cross-validation')  # TODO: Help cross_val
+                else:
+                    self.cross_val = False
 
-                self.cross_val = st.sidebar.toggle("Compare several parameters' configurations with Cross-validation",
-                                                   help='Help cross-validation')  # TODO: Help cross_val
                 if self.cross_val:
                     with st.sidebar.expander(':blue[__Cross-validation parameters__]'):
                         try:
-                            self.random_state = int(st.number_input("Fold number:",
+                            self.nfold = int(st.number_input("Fold number:",
                                                                     value=5,
                                                                     min_value=2,
                                                                     step=1,
@@ -138,41 +133,38 @@ class AppWeb:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
                     self.hyperparameters_list = self.model_hyperparameters.keys()
                     self.hyperparameters_values = dict()
-                    #TODO si pas de paramètres dans la structure, ne pas proposer la cross val
                     if self.cross_val:
-                        #TODO : recuperer nombre de folds -------self.nfold =
                         self.hyperparameter_setting_crossval()
-                        #TODO: transform each hyperparameter in a list, even if null or with anly one value
                     else:
                         self.hyperparameter_setting()
 
             except MissingClassError:
-                st.markdown(":red[__Missing class in the training values. Please change your random state.__]")
+                st.markdown(":red[__Training data do not have all classes"
+                            " represented, please change your random seed.__]")
 
             #  Machine learning *******************************************************************************
             try:
                 self.ml = ml.MachineLearning(model_type=self.model_type,
-                                          model_name=self.model,
-                                          hyper_params=self.hyperparameters_values,
-                                          X_train=self.X_train,
-                                          X_test=self.X_test,
-                                          y_train=self.y_train,
-                                          y_test=self.y_test,
-                                          classes=self.classes_set,
-                                          cross_val=self.cross_val)
-                with st.expander("Evaluation"):
+                                             model_name=self.model,
+                                             hyper_params=self.hyperparameters_values,
+                                             X_train=self.X_train,
+                                             X_test=self.X_test,
+                                             y_train=self.y_train,
+                                             y_test=self.y_test,
+                                             classes=self.classes_set,
+                                             cross_val=self.cross_val)
+                with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
 
                     if self.model_type == 'Classification':
                         pass
-                        # TODO: Affichage de la matrice de confusion en graph
-                        #st.pyplot(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+                        st.markdown(":green[__Confusion Matrix__]")
                         self.ml.conf_matrix()
 
 
             except AttributeError:
                 # TODO: Compléter le rapport d'erreur
-                st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil: :poop:")
+                st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil:")
 
         finally:
             self.conn.close()
@@ -211,12 +203,11 @@ class AppWeb:
                                               self.model_hyperparameters[hp]['values'],
                                               help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
+                    hp_value = []
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
                                               help=f"{self.model_hyperparameters[hp]['description']}")
-                        if not hp_show:
-                            hp_value = None
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
                         hp_value = st.text_input(label=f"Hyperparameter {hp}:",
@@ -263,7 +254,10 @@ class AppWeb:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
                         if len(hp_value) == 0:
                             st.markdown(":red[__Error: You must enter at least one value.__]")
+
+                        hp_value.append(value)
                         hp_value = list(filter(None, hp_value))
+
                 self.hyperparameters_values[hp] = hp_value
 
     def hyperparameter_setting(self):
@@ -304,6 +298,7 @@ class AppWeb:
                                                        help=f"{self.model_hyperparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
+
 
 class InferiorToMinError(Exception):
     pass
