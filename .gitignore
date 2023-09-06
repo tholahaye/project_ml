@@ -1,4 +1,5 @@
 .venv
+.env
 access.txt
 test.py
 brouillon_ml.py

@@ -4,9 +4,8 @@ import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 import ml
 from constantes import STRUCTURE
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix
+from decouple import config
+
 
 class AppWeb:
 
@@ -20,14 +19,11 @@ class AppWeb:
         st.title("Bienvenue chez les dauphins de Chine !")
 
         try:
-            access = open('access.txt').readlines()
-            for n in range(len(access)):
-                access[n] = access[n].strip('\n')
 
-            self.conn = psycopg2.connect(host=access[0],
-                                         database=access[1],
-                                         user=access[2],
-                                         password=access[3])
+            self.conn = psycopg2.connect(host=config("HOST"),
+                                         database=config("DATABASE"),
+                                         user=config("USER"),
+                                         password=config("PASSWORD"))
 
             self.cursor = self.conn.cursor()
 
