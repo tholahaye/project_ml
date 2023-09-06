@@ -171,6 +171,8 @@ class AppWeb:
                         st.markdown(":green[__Confusion Matrix__]")
                         self.ml.conf_matrix()
 
+            except ml.NbHyperError:
+                st.markdown(":red[__Not enough hyperparameters values to do cross validation__]")
 
             except AttributeError:
                 # TODO: Compléter le rapport d'erreur
@@ -212,6 +214,7 @@ class AppWeb:
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value = st.multiselect(f"Hyperparameter {hp}:",
                                               self.model_hyperparameters[hp]['values'],
+                                              default=self.model_hyperparameters[hp]['values'][0],
                                               help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:
@@ -242,6 +245,7 @@ class AppWeb:
                                 except ValueError:
                                     st.markdown(f":red[__Error: You must "
                                                 f"type a list of {hp_type} separated by ';'.__]")
+                                    break
 
                                 try:
                                     min_hp = self.model_hyperparameters[hp]['min_value']

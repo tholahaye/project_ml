@@ -9,7 +9,8 @@ import seaborn as sns
 import streamlit as st
 
 
-
+class NbHyperError(Exception):
+    pass
 
 class MachineLearning:
     def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
@@ -33,8 +34,14 @@ class MachineLearning:
 
         # TODO: *********************CROSS-VAL ICI********************************************
         if self.cross_val:
+            print(self.hyper_params)
+            nb_hyper = set()
+            for h in self.hyper_params.values():
+                nb_hyper.add(len(h))
+            if max(nb_hyper) <= 1:
+                raise NbHyperError
             #TODO : erreur si une valeur unique par hyperparametre
-            self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
+            '''self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
             self.grid_search.fit(self.X_train, self.y_train)
             self.cv_comb_params = self.grid_search.cv_results_['params']
             self.y_pred = self.grid_search.predict(self.X_test)
@@ -46,7 +53,8 @@ class MachineLearning:
                 self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
             if self.model_type == "Regression":
                 self.tab_eval = create_tab_eval_reg()
-                self.evaluate_reg()
+                self.evaluate_reg()'''
+            st.text('ca marche')
 
         # TODO: ******************************************************************************
         else:
