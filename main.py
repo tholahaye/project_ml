@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 import ml
-from constantes import STRUCTURE, CV_MAX_RES
+from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
 from decouple import config
 
 
@@ -124,6 +124,10 @@ class AppWeb:
                         except ValueError:
                             st.markdown(':red[__Error: The number of fold must be an integer__]')
 
+                        self.cv_score = st.selectbox('Optimize: ',
+                                                     CV_SCORES[self.model_type],
+                                                     help='The score to optimize during the cross-validation')
+
 
                 if self.model_type:
                     self.model_hyperparameters = STRUCTURE[self.model_type][self.model]['hyperparameters']
@@ -150,7 +154,7 @@ class AppWeb:
                                              classes=self.classes_set,
                                              cross_val=self.cross_val,
                                              cv_nfold=self.nfold,
-                                             cv_score="accuracy")
+                                             cv_score=self.cv_score)
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
@@ -220,48 +224,53 @@ class AppWeb:
 
                         hp_value = hp_value.split(';')
                         for value in hp_value:
+                            value = str(value)
                             value = value.strip()
-                            if value == '' and len(hp_value) != 0:
-                                continue
-
-                            hp_type = self.model_hyperparameters[hp]['type']
                             try:
-                                if hp_type == 'int':
-                                    value = int(value)
-                                elif hp_type == 'float':
-                                    value = float(value)
-                            except ValueError:
-                                st.markdown(f":red[__Error: You must "
-                                            f"type a list of {hp_type} separated by ';'.__]")
+                                if value == '' and len(hp_value) != 0:
+                                    continue
 
-                            try:
-                                min_hp = self.model_hyperparameters[hp]['min_value']
-                                if min_hp > value:
-                                    raise InferiorToMinError
-                            except KeyError:
-                                pass
-                            except TypeError:
-                                pass
+                                hp_type = self.model_hyperparameters[hp]['type']
+                                try:
+                                    if hp_type == 'int':
+                                        value = int(value)
+                                    elif hp_type == 'float':
+                                        value = float(value)
+                                except ValueError:
+                                    st.markdown(f":red[__Error: You must "
+                                                f"type a list of {hp_type} separated by ';'.__]")
+
+                                try:
+                                    min_hp = self.model_hyperparameters[hp]['min_value']
+                                    if min_hp > value:
+                                        raise InferiorToMinError
+                                except KeyError:
+                                    pass
+                                except TypeError:
+                                    pass
+
+                                try:
+                                    max_hp = self.model_hyperparameters[hp]['max_value']
+                                    if max_hp < value:
+                                        raise SuperiorToMaxError
+
+                                except KeyError:
+                                    pass
+                                except TypeError:
+                                    pass
+
+                                hp_value.append(value)
+
                             except InferiorToMinError:
                                 st.markdown(f":red[__Error: Your values must be superior or equal to {min_hp}.__]")
-
-                            try:
-                                max_hp = self.model_hyperparameters[hp]['max_value']
-                                if max_hp < value:
-                                    raise SuperiorToMaxError
-                            except KeyError:
-                                pass
-                            except TypeError:
-                                pass
                             except SuperiorToMaxError:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
-                        if len(hp_value) == 0:
-                            st.markdown(":red[__Error: You must enter at least one value.__]")
 
-                        hp_value.append(value)
                         hp_value = list(filter(None, hp_value))
-
-                self.hyperparameters_values[hp] = hp_value
+                if len(hp_value) == 0:
+                    st.markdown(":red[__Error: You must enter at least one value.__]")
+                else:
+                    self.hyperparameters_values[hp] = hp_value
 
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
