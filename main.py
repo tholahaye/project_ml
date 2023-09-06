@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 import ml
-from constantes import STRUCTURE, CV_SCORES
+from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
 from decouple import config
 
 
@@ -158,7 +158,7 @@ class AppWeb:
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
-                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(10),:])
+                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(CV_MAX_RES),:])
 
                 with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
@@ -209,7 +209,6 @@ class AppWeb:
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value = st.multiselect(f"Hyperparameter {hp}:",
                                               self.model_hyperparameters[hp]['values'],
-                                              default=self.model_hyperparameters[hp]['values'][0],
                                               help=f"{self.model_hyperparameters[hp]['description']}")
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:

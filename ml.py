@@ -3,7 +3,7 @@ from sklearn.metrics import classification_report, mean_squared_error,\
                             mean_absolute_error, max_error, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
-from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
+from constantes import STRUCTURE, CV_SCORES
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
@@ -13,7 +13,7 @@ import streamlit as st
 
 class MachineLearning:
     def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
-                 cross_val, cv_nfold, cv_score):
+                 cross_val, cv_nfold, cv_score="max_error"):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
