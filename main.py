@@ -3,8 +3,13 @@ import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 from ml import MachineLearning
+import plotly.figure_factory as ff
+from preprocessing import Preprocessing, MissingClassError
+import ml
 from constantes import STRUCTURE
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 
 class AppWeb:
 
@@ -101,6 +106,9 @@ class AppWeb:
                     st.dataframe(self.dataframe)
 
                 # TODO: A enlever du final
+                # with st.expander("stsqdfjlkdf"):
+                #     ml.confusion_matrix(self.y_test, self.y_pred)
+
                 with st.expander("Train/test"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
@@ -140,7 +148,7 @@ class AppWeb:
 
             #  Machine learning *******************************************************************************
             try:
-                self.ml = MachineLearning(model_type=self.model_type,
+                self.ml = ml.MachineLearning(model_type=self.model_type,
                                           model_name=self.model,
                                           hyper_params=self.hyperparameters_values,
                                           X_train=self.X_train,
@@ -151,10 +159,12 @@ class AppWeb:
                                           cross_val=self.cross_val)
                 with st.expander("Evaluation"):
                     st.dataframe(self.ml.tab_eval)
+
                     if self.model_type == 'Classification':
                         pass
                         # TODO: Affichage de la matrice de confusion en graph
                         #st.pyplot(pd.DataFrame(self.ml.cf_matrix).style.background_gradient(cmap='coolwarm'))
+                        self.ml.conf_matrix()
 
 
             except AttributeError:
@@ -291,7 +301,6 @@ class AppWeb:
                                                        help=f"{self.model_hyperparameters[hp]['description']}")
 
                 self.hyperparameters_values[hp] = hp_value
-
 
 class InferiorToMinError(Exception):
     pass

@@ -3,6 +3,10 @@ from sklearn.metrics import classification_report, mean_squared_error,\
                             mean_absolute_error, max_error, confusion_matrix
 
 from constantes import STRUCTURE
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+import streamlit as st
 
 #recupérer les classes, le model_type, model_name, self.hyper_params, X/y test & train
 
@@ -33,6 +37,8 @@ class MachineLearning:
 
             if self.model_type == "Classification":
                 self.tab_eval = self.create_tab_eval_clf()
+                print(self.y_pred)
+                print(self.y_test)
                 self.evaluate_clf()
                 self.cf_matrix = confusion_matrix(self.y_test, y_pred=self.y_pred)
             if self.model_type == "Regression":
@@ -83,6 +89,17 @@ class MachineLearning:
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxe": max_error(self.y_test, self.y_pred)}
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
+    
+    def conf_matrix(self):
+
+        # Créez un graphique de la matrice de confusion
+        fig = plt.figure(figsize=(6, 6))
+        sns.heatmap(self.cf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False, square=True)
+        plt.xlabel('Valeurs Prédites')
+        plt.ylabel('Valeurs Réelles')
+        plt.title('Matrice de Confusion')
+        plt.show()
+        return st.pyplot(fig)
 
 def create_tab_eval_reg():
     tab_eval = pd.DataFrame(columns=["model", "hyperparameters", "fold", "rmse", "mae"])
