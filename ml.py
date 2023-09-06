@@ -37,7 +37,7 @@ class MachineLearning:
             self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
             self.grid_search.fit(self.X_train, self.y_train)
             self.cv_comb_params = self.grid_search.cv_results_['params']
-            self.y_pred = grid_search.predict(self.X_test)
+            self.y_pred = self.grid_search.predict(self.X_test)
             self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
             self.evaluate_crossval()
             if self.model_type == "Classification":

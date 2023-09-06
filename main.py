@@ -127,6 +127,9 @@ class AppWeb:
                         self.cv_score = st.selectbox('Optimize: ',
                                                      CV_SCORES[self.model_type],
                                                      help='The score to optimize during the cross-validation')
+                else:
+                    self.nfold = None
+                    self.cv_score = None
 
 
                 if self.model_type:
