@@ -162,7 +162,8 @@ class AppWeb:
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
-                        #st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score, ascending=False)[range(CV_MAX_RES),:])
+                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score,
+                                                                     ascending=False)[range(CV_MAX_RES), :])
                         print('table_eval')
 
                 with st.expander(":green[__Evaluation__]"):
@@ -213,6 +214,7 @@ class AppWeb:
     def hyperparameter_setting_crossval(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
+                hp_value = None
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value_result = st.multiselect(f"Hyperparameter {hp}:",
                                               self.model_hyperparameters[hp]['values'],
@@ -224,6 +226,7 @@ class AppWeb:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
                                               value=False,
                                               help=f"{self.model_hyperparameters[hp]['description']}")
+
                         print(2)
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
@@ -293,8 +296,8 @@ class AppWeb:
                             except SuperiorToMaxError:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
 
-                        hp_value = list(filter(None, hp_value))
-                if len(hp_value) == 0:
+                        hp_value_result = list(filter(None, hp_value_result))
+                if len(hp_value_result) == 0:
                     st.markdown(":red[__Error: You must enter at least one value.__]")
                 else:
                     print(4)
@@ -346,13 +349,19 @@ class AppWeb:
             except ValueError:
                 value = None
             step = 0.01
-
-        hp_value = st.number_input(label=f"Hyperparameter {hp}:",
-                                   value=value,
-                                   step=step,
-                                   min_value=min_value,
-                                   max_value=max_value,
-                                   help=f"{self.model_hyperparameters[hp]['description']}")
+        if value:
+            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                       value=value,
+                                       step=step,
+                                       min_value=min_value,
+                                       max_value=max_value,
+                                       help=f"{self.model_hyperparameters[hp]['description']}")
+        else:
+            hp_value = st.number_input(label=f"Hyperparameter {hp}:",
+                                       step=step,
+                                       min_value=min_value,
+                                       max_value=max_value,
+                                       help=f"{self.model_hyperparameters[hp]['description']}")
 
         return hp_value
 
