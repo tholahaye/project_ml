@@ -145,6 +145,8 @@ class MachineLearning:
         transform = ax.transAxes
         line.set_transform(transform)
         ax.add_line(line)
+        plt.xlabel("true values")
+        plt.ylabel("predicted values")
         plt.show()
         return st.pyplot(fig)
 
