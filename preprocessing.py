@@ -76,18 +76,17 @@ class Preprocessing:
         #TODO: Enlever les colinear
         pass
 
+    def remove_outliers(self, threshold=1.5):
 
-    def remove_outliers(self):
-        pass
-        # TODO: Elimination des outliers
-        #z_sc = np.abs(stats.zscore(self.df))
-        #self.df = self.df[(z_sc < 3).all(axis=1)]
-
-    ''' def outliers(self, contamination=0.05):
-            outlier_detector = IsolationForest(contamination=contamination)
-            outlier_labels = outlier_detector.fit_predict(self.X_df)
-            self.df = self.df[outlier_labels == 1]
-            return self.df'''
+        numeric_columns = self.df.select_dtypes(include=['number']).columns
+        for column in numeric_columns:
+            if self.df[column].dtype != 'object':
+                Q1 = self.df[column].quantile(0.25)
+                Q3 = self.df[column].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - threshold * IQR
+                upper_bound = Q3 + threshold * IQR
+                self.df = self.df[(self.df[column] >= lower_bound) & (self.df[column] <= upper_bound)]
 
     def scaler(self):
         scaler = StandardScaler()
