@@ -3,8 +3,6 @@ from sklearn.ensemble import IsolationForest
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from scipy import stats
-import pandas as pd
 
 from sklearn.model_selection import train_test_split
 
@@ -85,16 +83,15 @@ class Preprocessing:
         #z_sc = np.abs(stats.zscore(self.df))
         #self.df = self.df[(z_sc < 3).all(axis=1)]
 
+    ''' def outliers(self, contamination=0.05):
+            outlier_detector = IsolationForest(contamination=contamination)
+            outlier_labels = outlier_detector.fit_predict(self.X_df)
+            self.df = self.df[outlier_labels == 1]
+            return self.df'''
+
     def scaler(self):
         scaler = StandardScaler()
         self.df = scaler.fit_transform(self.X_df, self.y_df)
-
-    # TODO: Utile ?
-    def outliers(self, contamination=0.05):
-        outlier_detector = IsolationForest(contamination=contamination)
-        outlier_labels = outlier_detector.fit_predict(self.X_df)
-        self.df = self.df[outlier_labels == 1]
-        return self.df
 
     def corr_matrix(self):
         corr = self.X_df.corr()

@@ -3,9 +3,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression, Ridge
 
-#from sklearn.neighbors import KNeighborsClassifier
-#from sklearn.svm import SVC
-#import streamlit as st
+
 TARGET = 'target'
 
 CV_SCORES = {
