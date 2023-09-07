@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 from preprocessing import Preprocessing, MissingClassError
 import ml
+import traceback
 from constantes import STRUCTURE, CV_SCORES, CV_MAX_RES
 from decouple import config
 
@@ -184,6 +185,7 @@ class AppWeb:
             except AttributeError:
                 # TODO: Compléter le rapport d'erreur
                 st.markdown(":red[__AttributeError: Oopsie!__] :see_no_evil:")
+                traceback.print_exc()
 
         finally:
             if self.conn:
