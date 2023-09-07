@@ -56,7 +56,6 @@ class MachineLearning:
             if self.model_type == "Regression":
                 self.tab_eval = create_tab_eval_reg()
                 self.evaluate_reg()
-            st.text('ca marche')
 
         # TODO: ******************************************************************************
         else:

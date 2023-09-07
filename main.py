@@ -222,7 +222,6 @@ class AppWeb:
                                               self.model_hyperparameters[hp]['values'],
                                               default=self.model_hyperparameters[hp]['values'][0],
                                               help=f"{self.model_hyperparameters[hp]['description']}")
-                    print(1)
                 if self.model_hyperparameters[hp]['type'] in ['int', 'float']:
                     if self.model_hyperparameters[hp]['optional']:
                         hp_show = st.checkbox(label=f"Hyperparameter {hp}:",
@@ -237,62 +236,47 @@ class AppWeb:
                                                  value=self.model_hyperparameters[hp]['default'],
                                                  help=f"{self.model_hyperparameters[hp]['description']}."
                                                       "Separate the wanted values by ';'.")
-                        print(3)
                         hp_value = hp_value.split(';')
                         hp_value_result = []
-                        print(f"hp value: {hp_value}")
                         for value in hp_value:
                             value = str(value)
                             value = value.strip()
-                            print(value)
                             try:
                                 if value == '' and len(hp_value) != 0:
-                                    print('len 0')
                                     continue
 
                                 hp_type = self.model_hyperparameters[hp]['type']
-                                print('hp_type'+hp_type)
                                 try:
                                     if hp_type == 'int':
                                         value = int(value)
-                                        print('value int')
 
                                     elif hp_type == 'float':
                                         value = float(value)
-                                        print('value float')
                                 except ValueError:
                                     st.markdown(f":red[__Error: You must "
                                                 f"type a list of {hp_type} separated by ';'.__]")
-                                    print('value error')
                                     break
 
                                 try:
                                     min_hp = self.model_hyperparameters[hp]['min_value']
                                     if min_hp > value:
-                                        print('inferior to min')
                                         raise InferiorToMinError
                                 except KeyError:
-                                    print('Key error')
                                     pass
 
                                 except TypeError:
-                                    print('Type error')
                                     pass
 
                                 try:
                                     max_hp = self.model_hyperparameters[hp]['max_value']
                                     if max_hp < value:
-                                        print('superior to max')
                                         raise SuperiorToMaxError
 
                                 except KeyError:
-                                    print('Key error')
                                     pass
                                 except TypeError:
-                                    print('Type error')
                                     pass
                                 hp_value_result.append(value)
-                                print('append value')
 
                             except InferiorToMinError:
                                 st.markdown(f":red[__Error: Your values must be superior or equal to {min_hp}.__]")
@@ -304,11 +288,9 @@ class AppWeb:
                     if len(hp_value_result) == 0 and (self.model_hyperparameters[hp]['optional'] or hp_show):
                         st.markdown(":red[__Error: You must enter at least one value.__]")
                     else:
-                        print(4)
                         self.hyperparameters_values[hp] = hp_value_result
                 except TypeError:
                     self.hyperparameters_values[hp] = []
-            print(5)
 
     def hyperparameter_setting(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
