@@ -4,25 +4,23 @@ from sklearn.metrics import classification_report, mean_squared_error,\
 from sklearn.model_selection import GridSearchCV
 
 from constantes import STRUCTURE, CV_SCORES
-import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
-import matplotlib.transforms as mtransforms
 
 
 class NbHyperError(Exception):
     pass
 
 class MachineLearning:
-    def __init__(self, model_type, model_name, hyper_params, X_train, y_train, X_test, y_test, classes,
+    def __init__(self, model_type, model_name, hyper_params,
+                 X_train, y_train, X_test, y_test, classes,
                  cross_val, cv_nfold, cv_score):
         self.model_type = model_type
         self.model_name = model_name
         self.hyper_params = hyper_params
-        # TODO? Changer X_train, X_test, y_train, y_test en un seul dictionnaire
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
@@ -36,7 +34,6 @@ class MachineLearning:
 
         self.model = STRUCTURE[self.model_type][self.model_name]["model"]
 
-        # TODO: *********************CROSS-VAL ICI********************************************
         if self.cross_val:
             nb_hyper = set()
             for h in self.hyper_params.values():
@@ -61,7 +58,6 @@ class MachineLearning:
                 self.tab_eval = create_tab_eval_reg()
                 self.evaluate_reg()
 
-        # TODO: ******************************************************************************
         else:
             self.model.set_params(**self.hyper_params)
             self.model.fit(self.X_train, self.y_train)
