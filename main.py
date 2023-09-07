@@ -162,7 +162,7 @@ class AppWeb:
                                              cv_score=self.cv_score)
 
                 if self.cross_val:
-                    with st.expander("Parameters' selection with cross validation"):
+                    with st.expander(":green[__Parameters selection with cross validation__]"):
                         st.dataframe(self.ml.cv_tab_eval.sort_values(
                             by=self.cv_score,
                             ascending=False).head(min(self.ml.cv_ncomb_params, CV_MAX_RES)))
@@ -220,7 +220,6 @@ class AppWeb:
     def hyperparameter_setting_crossval(self):
         with st.sidebar.expander(":blue[__Hyperparameters__]"):
             for hp in self.hyperparameters_list:
-                hp_value = None
                 if self.model_hyperparameters[hp]['type'] == 'str':
                     hp_value_result = st.multiselect(f"Hyperparameter {hp}:",
                                               self.model_hyperparameters[hp]['values'],
@@ -236,17 +235,17 @@ class AppWeb:
                             hp_value_result = []
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
-                        hp_value = st.text_input(label=f"Hyperparameter {hp}:",
+                        hp_value_input = st.text_input(label=f"Hyperparameter {hp}:",
                                                  value=self.model_hyperparameters[hp]['default'],
                                                  help=f"{self.model_hyperparameters[hp]['description']}."
                                                       "Separate the wanted values by ';'.")
-                        hp_value = hp_value.split(';')
+                        hp_value_input = hp_value_input.split(';')
                         hp_value_result = []
-                        for value in hp_value:
+                        for value in hp_value_input:
                             value = str(value)
                             value = value.strip()
                             try:
-                                if value == '' and len(hp_value) != 0:
+                                if value == '' and len(hp_value_input) != 0:
                                     continue
 
                                 hp_type = self.model_hyperparameters[hp]['type']
