@@ -162,9 +162,9 @@ class AppWeb:
 
                 if self.cross_val:
                     with st.expander("Parameters' selection with cross validation"):
-                        st.dataframe(self.ml.cv_tab_eval.sort_values(by=self.cv_score,
-                                                                     ascending=False)[range(CV_MAX_RES), :])
-                        print('table_eval')
+                        st.dataframe(self.ml.cv_tab_eval.sort_values(
+                            by=self.cv_score,
+                            ascending=False).head(min(self.ml.cv_ncomb_params, CV_MAX_RES)))
 
                 with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
