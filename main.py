@@ -13,7 +13,7 @@ class AppWeb:
     def __init__(self):
         st.set_page_config(
             page_title="ML Playground",
-            layout="wide",
+            layout="centered",
             initial_sidebar_state="auto"
         )
 
@@ -38,16 +38,6 @@ class AppWeb:
             self.dataframe = self.df_creation()
 
             with st.sidebar.expander(':blue[__Preprocessing parameters__]'):
-                try:
-                    self.random_state = int(st.number_input("Random state:",
-                                                            value=42,
-                                                            min_value=0,
-                                                            step=1,
-                                                            help='Choose or write an integer. It controls the '
-                                                                 'shuffling applied to the data before'
-                                                                 ' applying the split.'))
-                except ValueError:
-                    st.markdown(':red[__Error: The selected random state must be an integer__]')
 
                 self.choice_na = st.selectbox("NaN treatment:",
                                               ['Remove line', 'Replaced by mean', 'Replaced by median'],
@@ -60,6 +50,16 @@ class AppWeb:
                                                               help='Choose or write a number between 0.0 and 1.0 and'
                                                                    'represent the threshold above which'
                                                                    'variables are considered collinear.'))
+                try:
+                    self.random_state = int(st.number_input("Split random state:",
+                                                            value=42,
+                                                            min_value=0,
+                                                            step=1,
+                                                            help='Choose or write an integer. It controls the '
+                                                                 'shuffling applied to the data before'
+                                                                 ' applying the split.'))
+                except ValueError:
+                    st.markdown(':red[__Error: The selected random state must be an integer__]')
 
                 self.test_size = float(st.number_input("Test size:",
                                                        value=0.2,

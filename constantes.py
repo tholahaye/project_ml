@@ -11,7 +11,7 @@ CV_SCORES = {
     'Regression': ['neg_root_mean_squared_error', 'neg_mean_absolute_error', 'max_error']
 }
 
-CV_MAX_RES = 10
+CV_MAX_RES = 3
 
 STRUCTURE = {
     'Classification': {
