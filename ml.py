@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+import matplotlib.transforms as mtransforms
+
 
 class NbHyperError(Exception):
     pass
@@ -131,6 +135,18 @@ class MachineLearning:
         plt.title('Matrice de Confusion')
         plt.show()
         return st.pyplot(fig)
+
+
+    def plot_reg(self):
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.scatter(self.y_test, self.y_pred)
+        line = mlines.Line2D([0, 1], [0, 1], color="green")
+        transform = ax.transAxes
+        line.set_transform(transform)
+        ax.add_line(line)
+        plt.show()
+        return st.pyplot(fig)
+
 
 def create_tab_eval_reg():
     tab_eval = pd.DataFrame(columns=["hyperparameters", "rmse", "mae", "maxerror"])

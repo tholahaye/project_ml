@@ -170,6 +170,10 @@ class AppWeb:
                 with st.expander(":green[__Evaluation__]"):
                     st.dataframe(self.ml.tab_eval)
                 
+                    if self.model_type == 'Regression':
+                        pass
+                        st.markdown(":green[__Predicted values by true values__]")
+                        self.ml.plot_reg()
                     if self.model_type == 'Classification':
                         pass
                         st.markdown(":green[__Confusion Matrix__]")
