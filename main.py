@@ -17,7 +17,8 @@ class AppWeb:
             initial_sidebar_state="auto"
         )
 
-        st.title("Bienvenue chez les dauphins de Chine !")
+        st.markdown(':green[__Groupe Bottaz-Lahaye-Lo__]')
+        st.title("Machine learning:")
 
         try:
 
