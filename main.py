@@ -107,8 +107,7 @@ class AppWeb:
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
                 if len(STRUCTURE[self.model_type][self.model]['hyperparameters']) != 0:
                     self.cross_val = st.sidebar.toggle("Compare several parameters configurations"
-                                                       " with Cross-validation",
-                                                       help='Help cross-validation')  # TODO: Help cross_val
+                                                       " with Cross-validation")
                     print(self.cross_val)
                 else:
                     self.cross_val = False
@@ -120,10 +119,8 @@ class AppWeb:
                                                                     value=5,
                                                                     min_value=2,
                                                                     step=1,
-                                                                    # TODO: A completer
                                                                     help='Choose or write an integer. It controls the '
-                                                                         'number of folds'
-                                                                         ' applied to the model.'))
+                                                                         'number of cross-validation folds'))
                         except ValueError:
                             st.markdown(':red[__Error: The number of fold must be an integer__]')
 
