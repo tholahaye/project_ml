@@ -15,7 +15,6 @@ class Preprocessing:
 
     def __init__(self, dataframe, model_type, choice_na, collinear_thresh, test_size=0.2, random_state=42):
 
-        # TODO: Verifier l'utilite de garder l'original
         self.df_original = dataframe
         self.df = dataframe
         self.model_type = model_type
