@@ -34,16 +34,17 @@ class MachineLearning:
 
         # TODO: *********************CROSS-VAL ICI********************************************
         if self.cross_val:
-            print(self.hyper_params)
             nb_hyper = set()
             for h in self.hyper_params.values():
                 nb_hyper.add(len(h))
             if max(nb_hyper) <= 1:
                 raise NbHyperError
             #TODO : erreur si une valeur unique par hyperparametre
-            self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold, scoring=CV_SCORES[self.model_type], refit=self.cv_score)
+            self.grid_search = GridSearchCV(self.model, self.hyper_params, cv=self.cv_nfold,
+                                            scoring=CV_SCORES[self.model_type], refit=self.cv_score)
             self.grid_search.fit(self.X_train, self.y_train)
             self.cv_comb_params = self.grid_search.cv_results_['params']
+            self.cv_ncomb_params = len(self.cv_comb_params)
             self.y_pred = self.grid_search.predict(self.X_test)
             self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
             self.evaluate_crossval()
@@ -90,8 +91,7 @@ class MachineLearning:
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
 
     def evaluate_reg(self):
-        row = {"model": self.model_name,
-               "hyperparameters": self.hyper_params,
+        row = {"hyperparameters": self.hyper_params,
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxerror": max_error(self.y_test, self.y_pred)}
@@ -101,8 +101,9 @@ class MachineLearning:
         for i in range(len(self.cv_comb_params)):
             row = {"hyperparameters": self.cv_comb_params[i]}
             for score in CV_SCORES[self.model_type]:
-                row[score] = self.grid_search.cv_results_["mean_test_" + score]
+                row[score] = self.grid_search.cv_results_["mean_test_" + score][i]
             self.cv_tab_eval = pd.concat([self.cv_tab_eval, pd.DataFrame([row])], ignore_index=True)
+
 
     def print_evaluate_crossval(self):
         for i in range(len(self.cv_comb_params)):
@@ -110,7 +111,8 @@ class MachineLearning:
             for score in CV_SCORES[self.model_type]:
                 row[score] = self.grid_search.cv_results_["mean_test_" + score]
             self.cv_tab_eval = pd.concat([self.cv_tab_eval, pd.DataFrame([row])], ignore_index=True)
-    
+
+
     def conf_matrix(self):
 
         # Créez un graphique de la matrice de confusion
