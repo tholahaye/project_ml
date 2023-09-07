@@ -227,7 +227,8 @@ class AppWeb:
                                               value=False,
                                               help=f"{self.model_hyperparameters[hp]['description']}")
 
-                        print(2)
+                        if not hp_show:
+                            hp_value_result = None
 
                     if not self.model_hyperparameters[hp]['optional'] or hp_show:
                         hp_value = st.text_input(label=f"Hyperparameter {hp}:",
@@ -297,7 +298,7 @@ class AppWeb:
                                 st.markdown(f":red[__Error: Your values must be inferior or equal to {max_hp}.__]")
 
                         hp_value_result = list(filter(None, hp_value_result))
-                if len(hp_value_result) == 0:
+                if len(hp_value_result) == 0 and (self.model_hyperparameters[hp]['optional'] or hp_show):
                     st.markdown(":red[__Error: You must enter at least one value.__]")
                 else:
                     print(4)
@@ -336,7 +337,7 @@ class AppWeb:
         if hp_type == 'int':
             try:
                 value = int(value)
-            except ValueError:
+            except:
                 value = None
             step = int(1)
 
