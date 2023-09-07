@@ -90,7 +90,7 @@ class MachineLearning:
                    "recall": report_dict[cl]['recall'],
                    "f1-score": report_dict[cl]['f1-score']}
             self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
-        row = {"hyperparameters": self.params,
+        row = {"hyperparameters": params,
                "classe": "__all (macro avg)",
                "accuracy": report_dict["accuracy"],
                "precision": report_dict['macro avg']['precision'],
