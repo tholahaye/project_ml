@@ -49,14 +49,6 @@ class AppWeb:
                 except ValueError:
                     st.markdown(':red[__Error: The selected random state must be an integer__]')
 
-                self.test_size = float(st.number_input("Test size:",
-                                                       value=0.2,
-                                                       min_value=0.01,
-                                                       max_value=0.99,
-                                                       help='Choose or write a number between 0.0 and 1.0 and'
-                                                            ' represent the proportion of the dataset'
-                                                            ' to include in the test split.'))
-
                 self.choice_na = st.selectbox("NaN treatment:",
                                               ['Remove line', 'Replaced by mean', 'Replaced by median'],
                                               help="Choose how the missing values will be treated.")
@@ -68,6 +60,14 @@ class AppWeb:
                                                               help='Choose or write a number between 0.0 and 1.0 and'
                                                                    'represent the threshold above which'
                                                                    'variables are considered collinear.'))
+
+                self.test_size = float(st.number_input("Test size:",
+                                                       value=0.2,
+                                                       min_value=0.01,
+                                                       max_value=0.99,
+                                                       help='Choose or write a number between 0.0 and 1.0 and'
+                                                            ' represent the proportion of the dataset'
+                                                            ' to include in the test split.'))
 
                 self.model_type = self.get_model_type()
 
