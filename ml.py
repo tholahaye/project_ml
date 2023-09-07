@@ -45,6 +45,7 @@ class MachineLearning:
             self.grid_search.fit(self.X_train, self.y_train)
             self.cv_comb_params = self.grid_search.cv_results_['params']
             self.cv_ncomb_params = len(self.cv_comb_params)
+            self.cv_best_params = self.grid_search.best_params_
             self.y_pred = self.grid_search.predict(self.X_test)
             self.cv_tab_eval = create_tab_eval_crossval(CV_SCORES[self.model_type])
             self.evaluate_crossval()
@@ -74,15 +75,19 @@ class MachineLearning:
 
 
     def evaluate_clf(self):
+        if self.cross_val:
+            params = self.cv_best_params
+        else:
+            params = self.hyper_params
         report_dict = classification_report(self.y_test, self.y_pred, output_dict=True)
         for cl in self.classes:
-            row = {"hyperparameters": self.hyper_params,
+            row = {"hyperparameters": params,
                    "classe": cl,
                    "precision": report_dict[cl]['precision'],
                    "recall": report_dict[cl]['recall'],
                    "f1-score": report_dict[cl]['f1-score']}
             self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
-        row = {"hyperparameters": self.hyper_params,
+        row = {"hyperparameters": self.params,
                "classe": "__all (macro avg)",
                "accuracy": report_dict["accuracy"],
                "precision": report_dict['macro avg']['precision'],
@@ -91,7 +96,11 @@ class MachineLearning:
         self.tab_eval = pd.concat([self.tab_eval, pd.DataFrame([row])], ignore_index=True)
 
     def evaluate_reg(self):
-        row = {"hyperparameters": self.hyper_params,
+        if self.cross_val:
+            params = self.cv_best_params
+        else:
+            params = self.hyper_params
+        row = {"hyperparameters": params,
                "rmse": mean_squared_error(self.y_test, self.y_pred),
                "mae": mean_absolute_error(self.y_test, self.y_pred),
                "maxerror": max_error(self.y_test, self.y_pred)}
