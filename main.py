@@ -98,11 +98,13 @@ class AppWeb:
                 with st.expander(":green[__Processed dataframe__]"):
                     st.dataframe(self.dataframe)
 
+                '''
                 with st.expander(":green[__Train/test__]"):
                     st.dataframe(preprocessing.X_train)
                     st.dataframe(preprocessing.X_test)
                     st.dataframe(preprocessing.y_train)
                     st.dataframe(preprocessing.y_test)
+                '''
 
                 self.model = st.sidebar.selectbox("_Model:_", STRUCTURE[self.model_type].keys())
                 if len(STRUCTURE[self.model_type][self.model]['hyperparameters']) != 0:
